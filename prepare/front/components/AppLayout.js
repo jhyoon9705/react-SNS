@@ -6,13 +6,15 @@ import { Menu, Input, Row, Col } from "antd";
 import styled from "styled-components";
 import UserProfile from "../components/UserProfile";
 import LoginForm from "../components/LoginForm";
+import { useSelector } from "react-redux";
 
 const SearchInput = styled(Input.Search)`
   vertical-align: middle;
 `;
 
 const AppLayout = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // isLoggedIn이 바뀌면 알아서 컴포넌트가 리렌더링
+  const { isLoggedIn } = useSelector((state) => state.user);
   return (
     <div>
       <Menu mode="horizontal">
@@ -40,11 +42,7 @@ const AppLayout = ({ children }) => {
         {/* xs: 모바일 / sm: 태블릿 / md: 작은 데스크탑 */}
         {/* 24가 max / 즉, n/24 */}
         <Col xs={24} md={6}>
-          {isLoggedIn ? (
-            <UserProfile setIsLoggedIn={setIsLoggedIn} />
-          ) : (
-            <LoginForm setIsLoggedIn={setIsLoggedIn} />
-          )}
+          {isLoggedIn ? <UserProfile /> : <LoginForm />}
         </Col>
         <Col xs={24} md={12}>
           {children}
