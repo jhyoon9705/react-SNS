@@ -1,29 +1,7 @@
 import { HYDRATE } from "next-redux-wrapper";
-
-const initialState = {
-  user: {
-    isLoggedIn: false,
-    user: null,
-    signUpData: {},
-    loginData: {},
-  },
-  post: {
-    mainPosts: [],
-  },
-};
-
-export const loginAction = (data) => {
-  return {
-    type: "LOG_IN",
-    data,
-  };
-};
-
-export const logoutAction = () => {
-  return {
-    type: "LOG_OUT",
-  };
-};
+import { combineReducers } from "redux";
+import user from "./user";
+import post from "./post";
 
 // action creator
 // const changeNickname = (data) => {
@@ -36,32 +14,19 @@ export const logoutAction = () => {
 // store.dispatch(changeNickname('yoonjh'));
 
 // Reducer: (이전 상태, 액션) => 다음 상태
-const rootReducer = (state = initialState, action) => {
-  switch (action.type) {
-    case HYDRATE:
-      return { ...state, ...action.payload };
-    case "LOG_IN":
-      return {
-        ...state,
-        user: {
-          ...state.user,
-          isLoggedIn: true,
-          user: action.data,
-        },
-      };
+const rootReducer = combineReducers({
+  // SSR을 위해 HYDRATE 추가를 하기 위해 index reducer를 추가
+  index: (state = {}, action) => {
+    switch (action.type) {
+      case HYDRATE:
+        return { ...state, ...action.payload };
 
-    case "LOG_OUT":
-      return {
-        ...state,
-        user: {
-          ...state.user,
-          isLoggedIn: false,
-          user: null,
-        },
-      };
-    default:
-      return state;
-  }
-};
+      default:
+        return state;
+    }
+  },
+  user,
+  post,
+});
 
 export default rootReducer;

@@ -15,6 +15,7 @@ const SearchInput = styled(Input.Search)`
 const AppLayout = ({ children }) => {
   // isLoggedIn이 바뀌면 알아서 컴포넌트가 리렌더링
   const { isLoggedIn } = useSelector((state) => state.user);
+  // const isLoggedIn = useSelector((state =? state.user.isLoggedIn)); 과 동일
   return (
     <div>
       <Menu mode="horizontal">
