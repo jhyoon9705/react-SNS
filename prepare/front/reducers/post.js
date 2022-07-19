@@ -6,16 +6,16 @@ export const initialState = {
         id: 1,
         nickname: "jhyoon",
       },
-      content: "첫 번째 개시글 #해시태그 #익스프레스",
+      content: "첫 번째 게시글 #해시태그 #익스프레스",
       Images: [
         {
-          src: "https://picsum.photos/id/0/200/300​",
+          src: "https://placeimg.com/640/480/arch​",
         },
         {
-          src: "https://picsum.photos/id/101/200/300​",
+          src: "https://placeimg.com/640/480/tech​",
         },
         {
-          src: "https://picsum.photos/id/237/200/300​",
+          src: "https://placeimg.com/640/480/nature​",
         },
       ],
       Comments: [
