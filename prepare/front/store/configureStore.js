@@ -2,10 +2,11 @@
 import { createWrapper } from "next-redux-wrapper";
 import { createStore, applyMiddleware, compose } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension"; // redux history 기록 용도(개발 모드일떄만 사용)
+import thunkMiddleware from "redux-thunk";
 import reducer from "../reducers";
 
 const configureStore = () => {
-  const middlewares = [];
+  const middlewares = [thunkMiddleware];
   const enhancer =
     process.env.NODE_ENV === "production"
       ? compose(applyMiddleware(...middlewares))
