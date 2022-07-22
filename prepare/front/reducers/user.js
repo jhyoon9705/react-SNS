@@ -13,29 +13,29 @@ export const initialState = {
   loginData: {},
 };
 
-export const LOG_IN_REQUEST = "LOG_IN_REQUEST";
-export const LOG_IN_SUCCESS = "LOG_IN_SUCCESS";
-export const LOG_IN_FAILURE = "LOG_IN_FAILURE";
+export const LOG_IN_REQUEST = 'LOG_IN_REQUEST';
+export const LOG_IN_SUCCESS = 'LOG_IN_SUCCESS';
+export const LOG_IN_FAILURE = 'LOG_IN_FAILURE';
 
-export const LOG_OUT_REQUEST = "LOG_OUT_REQUEST";
-export const LOG_OUT_SUCCESS = "LOG_OUT_SUCCESS";
-export const LOG_OUT_FAILURE = "LOG_OUT_FAILURE";
+export const LOG_OUT_REQUEST = 'LOG_OUT_REQUEST';
+export const LOG_OUT_SUCCESS = 'LOG_OUT_SUCCESS';
+export const LOG_OUT_FAILURE = 'LOG_OUT_FAILURE';
 
-export const SIGN_UP_REQUEST = "SIGN_UP_REQUEST";
-export const SIGN_UP_SUCCESS = "SIGN_UP_SUCCESS";
-export const SIGN_UP_FAILURE = "SIGN_UP_FAILURE";
+export const SIGN_UP_REQUEST = 'SIGN_UP_REQUEST';
+export const SIGN_UP_SUCCESS = 'SIGN_UP_SUCCESS';
+export const SIGN_UP_FAILURE = 'SIGN_UP_FAILURE';
 
-export const FOLLOW_REQUEST = "FOLLOW_REQUEST";
-export const FOLLOW_SUCCESS = "FOLLOW_SUCCESS";
-export const FOLLOW_FAILURE = "FOLLOW_FAILURE";
+export const FOLLOW_REQUEST = 'FOLLOW_REQUEST';
+export const FOLLOW_SUCCESS = 'FOLLOW_SUCCESS';
+export const FOLLOW_FAILURE = 'FOLLOW_FAILURE';
 
-export const UNFOLLOW_REQUEST = "UNFOLLOW_REQUEST";
-export const UNFOLLOW_SUCCESS = "UNFOLLOW_SUCCESS";
-export const UNFOLLOW_FAILURE = "UNFOLLOW_FAILURE";
+export const UNFOLLOW_REQUEST = 'UNFOLLOW_REQUEST';
+export const UNFOLLOW_SUCCESS = 'UNFOLLOW_SUCCESS';
+export const UNFOLLOW_FAILURE = 'UNFOLLOW_FAILURE';
 
 const dummyUser = (data) => ({
-  ...action.data,
-  nickname: "jhyoon",
+  ...data,
+  nickname: 'jhyoon',
   id: 1,
   Posts: [],
   Followings: [],
@@ -51,7 +51,7 @@ const dummyUser = (data) => ({
 //     const state = getState(); // combineReducers안에 있는 initialState 반환
 //     dispatch(loginRequestAction());
 //     axios
-//       .post("/api/login")
+//       .post('/api/login')
 //       .then((res) => {
 //         dispatch(loginSuccessAction(res.data));
 //       })
@@ -62,56 +62,52 @@ const dummyUser = (data) => ({
 // };
 
 // 아래 action-generator 6개는 redux-thunk용 / 각 요청마다 3개(request, success, failure) 3개씩
-export const loginRequestAction = (data) => {
-  return {
-    type: LOG_IN_REQUEST,
-    data,
-  };
-};
+export const loginRequestAction = (data) => ({
+  type: LOG_IN_REQUEST,
+  data,
+});
 
 // Failure/Success Action은 saga가 put으로 호출해주기 때문에 굳이 만들 필요없음
 // export const loginSuccessAction = (data) => {
 //   return {
-//     type: "LOG_IN_SUCCESS",
+//     type: 'LOG_IN_SUCCESS',
 //     data,
 //   };
 // };
 
 // export const loginFailureAction = (data) => {
 //   return {
-//     type: "LOG_IN_FAILURE",
+//     type: 'LOG_IN_FAILURE',
 //     data,
 //   };
 // };
 
-export const logoutRequestAction = () => {
-  return {
-    type: LOG_OUT_REQUEST,
-  };
-};
+export const logoutRequestAction = () => ({
+  type: LOG_OUT_REQUEST,
+});
 
 // export const logoutSuccessAction = () => {
 //   return {
-//     type: "LOG_OUT_SUCCESS",
+//     type: 'LOG_OUT_SUCCESS',
 //   };
 // };
 
 // export const logoutFailureAction = () => {
 //   return {
-//     type: "LOG_OUT_FAILURE",
+//     type: 'LOG_OUT_FAILURE',
 //   };
 // };
 
 // redux-thunk, saga 적용 이전
 // export const logoutAction = () => {
 //   return {
-//     type: "LOG_OUT",
+//     type: 'LOG_OUT',
 //   };
 // };
 
 // export const loginAction = () => {
 //   return {
-//     type: "LOG_IN",
+//     type: 'LOG_IN',
 //   };
 // };
 

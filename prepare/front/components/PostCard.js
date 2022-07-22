@@ -81,7 +81,7 @@ const PostCard = ({ post }) => {
                   author={item.User.nickname}
                   avatar={<Avatar>{item.User.nickname[0]}</Avatar>}
                   content={item.content}
-                ></Comment>
+                />
               </li>
             )}
           />

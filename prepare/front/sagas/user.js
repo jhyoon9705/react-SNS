@@ -10,6 +10,7 @@ import {
   SIGN_UP_SUCCESS,
   SIGN_UP_FAILURE,
 } from "../reducers/user";
+import axios from "axios";
 
 // effect들 앞에 yield 키워드를 붙여주는 이유
 // test 시에 편리 (한줄씩 실행하며 테스트가 가능)
@@ -45,7 +46,7 @@ function logOutAPI() {
 
 function* logOut() {
   try {
-    //const result = yield call(logOutAPI); // fork를 쓰면 비동기, call은 동기 함수 호출
+    // const result = yield call(logOutAPI); // fork를 쓰면 비동기, call은 동기 함수 호출
 
     // 서버 만들기 전 (for dev), delay effect로 비동기적인 효과 사용
     yield delay(1000);
@@ -67,7 +68,7 @@ function signUpAPI() {
 
 function* signUp() {
   try {
-    //const result = yield call(signUpAPI); // fork를 쓰면 비동기, call은 동기 함수 호출
+    // const result = yield call(signUpAPI); // fork를 쓰면 비동기, call은 동기 함수 호출
 
     // 서버 만들기 전 (for dev), delay effect로 비동기적인 효과 사용
     yield delay(1000);
