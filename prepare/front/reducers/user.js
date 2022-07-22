@@ -1,5 +1,7 @@
 export const initialState = {
+  isLoggingIn: false, // 로그인 시도중
   isLoggedIn: false,
+  isLoggingOut: false, // 로그아웃 시도중
   me: null,
   signUpData: {},
   loginData: {},
@@ -32,19 +34,20 @@ export const loginRequestAction = (data) => {
   };
 };
 
-export const loginSuccessAction = (data) => {
-  return {
-    type: "LOG_IN_SUCCESS",
-    data,
-  };
-};
+// Failure/Success Action은 saga가 put으로 호출해주기 때문에 굳이 만들 필요없음
+// export const loginSuccessAction = (data) => {
+//   return {
+//     type: "LOG_IN_SUCCESS",
+//     data,
+//   };
+// };
 
-export const loginFailureAction = (data) => {
-  return {
-    type: "LOG_IN_FAILURE",
-    data,
-  };
-};
+// export const loginFailureAction = (data) => {
+//   return {
+//     type: "LOG_IN_FAILURE",
+//     data,
+//   };
+// };
 
 export const logoutRequestAction = () => {
   return {
@@ -52,45 +55,72 @@ export const logoutRequestAction = () => {
   };
 };
 
-export const logoutSuccessAction = () => {
-  return {
-    type: "LOG_OUT_SUCCESS",
-  };
-};
+// export const logoutSuccessAction = () => {
+//   return {
+//     type: "LOG_OUT_SUCCESS",
+//   };
+// };
 
-export const logoutFailureAction = () => {
-  return {
-    type: "LOG_OUT_FAILURE",
-  };
-};
+// export const logoutFailureAction = () => {
+//   return {
+//     type: "LOG_OUT_FAILURE",
+//   };
+// };
 
 // redux-thunk, saga 적용 이전
-export const logoutAction = () => {
-  return {
-    type: "LOG_OUT",
-  };
-};
+// export const logoutAction = () => {
+//   return {
+//     type: "LOG_OUT",
+//   };
+// };
 
-export const logineAction = () => {
-  return {
-    type: "LOG_IN",
-  };
-};
+// export const loginAction = () => {
+//   return {
+//     type: "LOG_IN",
+//   };
+// };
 
 const reducer = (state = initialState, action) => {
   switch (action.type) {
-    case "LOG_IN":
+    case "LOG_IN_REQUEST":
       return {
         ...state,
-        isLoggedIn: true,
-        me: action.data,
+        isLoggingIn: true,
       };
 
-    case "LOG_OUT":
+    case "LOG_IN_SUCCESS":
       return {
         ...state,
+        isLoggingIn: false,
+        isLoggedIn: true,
+        me: { ...action.data, nickname: "jhyoon" },
+      };
+
+    case "LOG_IN_FAILURE":
+      return {
+        ...state,
+        isLoggingIn: false,
+        isLoggedIn: false,
+      };
+
+    case "LOG_OUT_REQUEST":
+      return {
+        ...state,
+        isLoggingOut: true,
+      };
+
+    case "LOG_OUT_SUCCESS":
+      return {
+        ...state,
+        isLoggingOut: false,
         isLoggedIn: false,
         me: null,
+      };
+
+    case "LOG_OUT_FAILURE":
+      return {
+        ...state,
+        isLoggingOut: false,
       };
     default:
       return state;
