@@ -39,6 +39,6 @@
     "consistent-return": "off",
     "no-unused-vars": "off",
     "operator-linebreak": "off",
-    "no-trailing-spaces": "off"
+    "no-trailing-spaces": "off",
   }
 }
