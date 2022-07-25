@@ -40,5 +40,6 @@
     "no-unused-vars": "off",
     "operator-linebreak": "off",
     "no-trailing-spaces": "off",
+    "max-len": "off"
   }
 }

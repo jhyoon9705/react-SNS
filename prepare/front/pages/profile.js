@@ -6,7 +6,6 @@ import NicknameEditForm from '../components/NicknameEditForm';
 import FollowList from '../components/FollowList';
 import AppLayout from '../components/AppLayout';
 
-
 const Profile = () => {
   // const followerList = [
   //   { nickname: 'abc123' },
