@@ -6,7 +6,7 @@ ___
  - **Back**:  
 ___
 
-## Part 01. Screen Configuration
+## Part 01. Screen Configuration (+ Custom hook)
 ### 1. Grid system
 &nbsp;: '**24 / n**열'로 계산하여 적용
 - xs(extra-small): 0~600px / 모바일
@@ -30,7 +30,7 @@ ___
   - `_parent`: 부모 프레임(frame)에서 페이지 열기
   - `_top`: 현재 창에서 full window로 페이지 열기
 <br />
-- **`_blank` 사용 시 주의할 점**
+- **`_blank` 사용 시 주의할 점** 
 : 보안 상의 문제를 해결하기 위해 `rel="noreferrer noopener` 속성을 추가해주어야 함
   > 참고) 링크된 페이지의 js에서 window.opener로 부모 window의 object에 접근해서 'window.opener.location = 새로운 URL'로 부모 window URL을 바꿀 경우, 보안 상의 문제 발생
 
@@ -102,5 +102,175 @@ NodeBird.propTypes = {
 
 export default NodeBird;
 ```
+
+<br />
+
+### 5. 커스텀 훅(Custom hook)
+다음과 같은 코드가 있는 경우
+```js
+const [nickname, setNickname] = useState('');
+const onChangeNickname = useCallback((e) => {
+  setNickname(e.target.value);
+}, []);
+
+const [id, setId] = useState('');
+const onChangeId = useCallback((e) => {
+  setId(e.target.value);
+}, []);
+
+const [password, setPassword] = useState('');
+const onChangePassword = useCallback((e) => {
+  setPassword(e.target.value);
+}, []);
+```
+중복되는 코드가 너무 많음. 따라서 custom hook으로 만들어주면 편리해짐
+
+```js
+// hooks/useInput.js
+import { useState, useCallback } from "react";
+
+export default (initialValue = null) => {
+  const [value, setValue] = useState(initialValue);
+  const handler = useCallback((e) => {
+    setValue(e.target.value);
+  }, []);
+  return [value, handler]; // 배열에 setValue도 추가하여 추가적으로 반환 가능
+};
+```
+위와 같이 커스텀 훅을 만들고, 다음과 같이 사용함
+```js
+const [nickname, setNickname] = useInput('');
+const [id, onChangeId] = useInput('');
+const [password, onChangePassword] = useInput('');
+```
+
 ___
+
+## Part 02. Apply redux/middleware/redux-devtools
+### 1. Redux-devtools-extension
+- redux history 기록 용도로 사용하며, 개발모드일때만 사용하도록 설정하는 것이 좋음(Chrome 개발자 도구 호환)
+- `npm i redux-devtools-extension` 필요
+<br />
+
+### 2. next-redux-wrapper
+: Next.js에 redux를 간편하게 붙이도록 도와주는 라이브러리
+```js
+// store/configureStore.js
+// next-redux-wrapper를 사용
+import { createWrapper } from "next-redux-wrapper";
+import { createStore, applyMiddleware, compose } from "redux";
+import { composeWithDevTools } from "redux-devtools-extension";
+import reducer from "../reducers";
+
+const configureStore = () => {
+  const middlewares = []; // saga 또는 thunk 도입 시, 이 배열 안에 삽입
+  const enhancer =
+    process.env.NODE_ENV === "production"
+      ? compose(applyMiddleware(...middlewares)) // 배포용 미들웨어
+      : composeWithDevTools(applyMiddleware(...middlewares)); // 개발용 미들웨어
+  const store = createStore(reducer, enhancer);
+  return store;
+};
+
+const wrapper = createWrapper(configureStore, {
+  debug: process.env.NODE_ENV === "development", 
+  // debug: true일 경우, 개발 시에 redux에 관한 자세한 설명을 확인 가능
+});
+
+export default wrapper;
+```
+이를 `pages/_app.js`에 가져와서, 아래와 같이 high-order 컴포넌트로 감싸줌
+```js
+import wrapper from "../store/configureStore";
+...
+export default wrapper.withRedux(NodeBird);
+```
+또한, Next.js에서는 `<Provider store={store}>...</Provider>`처럼 Provider로 감싸주지 않음 (next@6부터는 알아서 `Provider`로 감싸줌)
+
+<br />
+
+### 3. Redux
+#### 3-1. Redux의 개념
+**`store`** 에 있는 데이터들을
+```js
+// store 예시
+{
+  name: 'jhyoon9705'
+  age: '26',
+  password: 'abc1234',
+}
+```
+아래와 같은 **`action`** 들을 **`dispatch`** 하여 조작함. 이때, action은 모든 상황에 대해 
+```js
+{
+  type: 'CHANGE_PASSWORD' // type은 action의 이름
+  data: '9876zyx',
+}
+```
+그러나 js는 'CHANGE_PASSWORD'이 무엇인지 알지 못하기 때문에 **`reducer`** 에서 정의해주어야 함
+```js
+// reducer 예시 
+// cf) (이전 상태, 액션) => 다음 상태
+switch (action.type) {
+  case 'CHANGE_PASSWORD':
+    return {
+      ...state,
+      password: action.data,
+      posts: [{}, {}, {}],
+    }
+}
+```
+
+#### 3-2. 불변성(Immutability)
+```js
+{} === {} // false
+const a = {};
+const b = a;
+a=== b // true
+```
+- `reducer`에서 return할 때, **객체 자체는 새로 만들어서** return함
+    - **Why?** : 객체를 새로 만들어야 변경 내역이 추적이 가능 (덮어써버리면 이전 기록을 확인할 수 없음
+    - Redux 사용의 주요 목적 중 하나는 'data 변경의 history 관리'
+- spread 연산자(`...`)를 사용하는 이유
+    - 코드 길이 줄이기
+    - 메모리 절약(바뀌지 않는 항목들은 참조 관계를 유지 / 어차피 새로운 객체이기 때문에 둘이 다르다는 것을 redux가 인식함)
+    ```js
+    // A code (spread 연산자 사용 X)
+    return {
+      name: 'jhyoon9705',
+      age: 26,
+      password: action.data,
+      posts: [{}, {}, {}], // 바뀔 때 마다 객체 생성(메모리 소모)
+    }
+
+    // B code (spread 연산자 사용 O)
+    return {
+      ...state,
+      password: action.data,
+      posts: [{}, {}, {}], // 계속 유지가 되는 경우 참조 관계를 유지
+    }
+    ```
+
+#### 3-3. Action creator
+- 모든 변경 상황에 대하여 모든 action들을 매번 만들어주기는 어려움
+- 따라서, **동적으로 action을 만들어주는 함수**를 만들어서 사용
+  ```js
+  // action creator 예시
+  const changeNickname = (data) => {
+    return {
+      type: 'CHANGE_NICKNAME',
+      data,
+    }
+  }
+    ```
+- nickname을 'simpson'으로 바꾸고 싶을 경우 다음과 같이 사용
+  ```js
+  store.dispatch(changeNickname('simpson'));
+  ```
+
+
+___
+
+
+
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.
