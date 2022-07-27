@@ -30,7 +30,9 @@ ___
   - `_parent`: 부모 프레임(frame)에서 페이지 열기
   - `_top`: 현재 창에서 full window로 페이지 열기
 <br />
+
 - **`_blank` 사용 시 주의할 점:**  보안 상의 문제를 해결하기 위해 `rel="noreferrer noopener` 속성을 추가해주어야 함
+
   > 참고) 링크된 페이지의 js에서 window.opener로 부모 window의 object에 접근해서 'window.opener.location = 새로운 URL'로 부모 window URL을 바꿀 경우, 보안 상의 문제 발생
 
 <br />
