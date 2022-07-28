@@ -74,7 +74,7 @@ ___
 
 <br />
 
-### 4. 여러 pages들에서 공통되는 부분 분리하기
+### 4. 여러 page들에서 공통되는 부분 분리하기
 - pages 폴더 안에 `_app.js` 파일을 생성하여 처리
 - pages/index.js의 return 부분이 Component로 들어가게 됨 (_app.js가 index.js의 부모)
 - cf) 특정 컴포넌트(↔ 페이지)끼리 공통인 것들은 layout component를 만들어서 개별 컴포넌트를 감싸면 됨
@@ -268,10 +268,145 @@ a=== b // true
   ```js
   store.dispatch(changeNickname('simpson'));
   ```
+___
 
+## Part 03. Split reducers
+- `reducers/index.js` 파일이 너무 길어지면 코드 가독성이 떨어짐
+- initialState의 항목별로 reducer를 나누어주는 것이 좋음 (ex. user, post, ...)
+- 나눈 뒤, `index.js`에서 각각 import하여 redux의 `combineReducers`를 사용하여 합쳐줌
+```js
+// reducers/index.js
+const rootReducer = combineReducers({
+  // SSR을 위한 HYDRATE 추가를 하기 위해 index reducer를 추가
+  index: (state = {}, action) => {
+    switch (action.type) {
+      case HYDRATE:
+        return { ...state, ...action.payload };
+
+      default:
+        return state;
+    }
+  },
+  user,
+  post,
+});
+
+export default rootReducer;
+```
+- user의 initialState와 post의 initialState는 `combineReducers`에 의해 알아서 합쳐서 넣어줌
+  - 즉, `index.js`에는 initialState가 존재하지 않음
 
 ___
 
+## Part 04. Implementation with dummy data
+### 1. Optional chaining (`?.`)
+- 만약 아래와 같이 코드를 작성한다면 `me`가 존재하지 않을 수도 있기 때문에 불러오지 못한다면 undefined 에러가 발생함
+  ```js
+  const { me } = useSelector((state) => state.user);
+  const id = me.id;
+  ```
+- 따라서 다음과 같은 형태로 `me`가 있으면 `me.id`가 id에 들어가고, 없으면 id 값을 undefined로 정의함
+  ```js
+  const { me } = useSelector((state) => state.user);
+  const id = me && me.id;
+  ```
+- 위 코드를 **optional chaining**을 적용하면
+  ```js
+  const { me } = useSelector((state) => state.user);
+  const id = me?.id;
+  ```
+  또는
+  ```js
+  const { id } = useSelector((state) => state.user.me?.id);
+  ```
+<br />
 
+### 2. 배열 렌더링
+#### 2-1. key
+- `key`는 React가 어떤 항목을 변경, 추가, 삭제할지 식별하는 것을 도와줌
+- 배열을 렌더링할 때는 `key`라는 props를 설정해야함
+  - `key` 값이 있으면, 배열이 변경되었을 때, 변경된 요소만 리렌더링(즉, 수정되지 않는 기존의 값은 그대로 두고 원하는 곳에 내용을 삽입하거나 삭제)
+  - `key` 값이 없으면, 중간 값이 바뀌었을 때, 그 하위 값들이 전부 변하여 모두 리렌더링
 
+#### 2-2. 변화하는 배열의 index를 key로 사용하면 안되는 이유
+- 배열이 요소 추가, 삭제, 변경 등으로 변화할 경우, 배열이 새로 바뀌게 되면서 컴포넌트가 리렌더링 됨
+- 이때 index가 요소들에 새로 mapping 되는데, React는 `key`가 동일할 경우 동일한 DOM element를 보여주기 때문에 문제가 발생
+
+#### 2-3. key 값 설정
+- 요소가 추가, 삭제 등으로 배열이 변화하더라도 변하지 않는 unique한 값을 `key` 값으로 사용
+  - 서버에서 받아온 DB의 AUTO_INCREMENT된 값
+  - shortid 패키지 사용하여 생성된 랜덤한 값
+  - etc.
+
+<br />
+
+### 3. styled-component의 최소화
+- styled-component 안에 자손선택자(`&`)를 사용하여 styled-component의 수를 최소화 할 수 있음
+```js
+const Header = styled.header`
+  height: 44px;
+  background: white;
+  position: relative;
+  padding: 0;
+  text-align: center;
+
+  & h1 {
+    margin: 0;
+    font-size: 17px;
+    color: #333;
+    line-height: 44px;
+  }
+
+  & button {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 15px;
+    line-height: 14px;
+    cursor: pointer;
+  }
+`;
+
+...
+  <Header>
+    <h1>상세 이미지</h1>
+    <button onClick={onClose}>X</button>
+  </Header>
+...
+
+```
+
+<br />
+
+### 4. styled-component의 Global style
+- 애플리케이션 레벨에서 전체적으로 적용하고 싶은 속성이 있을 경우(또는 기존 스타일이 덮어써짐), styled-component의 `createGlobalStyle`을 사용
+```js
+const Global = createGlobalStyle`
+  .ant-row {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+`;
+
+...
+return (
+    <div>
+      <Global /> // 아무데나 넣어주면 됨
+      <Menu mode="horizontal">
+        <Menu.Item>
+        ...
+);
+```
+
+<br />
+
+### 5. Component 폴더
+- style 설정 등으로 인해 코드가 너무 길어지면 가독성이 좋지 않음
+- 따라서 컴포넌트 이름의 파일을 하나 만들고(`components\imagesZoom`), `index.js`와 `styles.js`을 만들어서 `index.js`에는 일반적인 코드를, `styles.js`에는 style들을 export하여 작성
+
+※ 이 repository의 `component\imagesZoom` 참고
+___
+
+## Part 05. Redux-thunk
+___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.
