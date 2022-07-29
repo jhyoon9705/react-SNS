@@ -408,5 +408,90 @@ return (
 ___
 
 ## Part 05. Redux-thunk
+### 1. Redux-thunk
+- Redux가 **비동기 action**을 dispatch할 수 있도록 도와주는 역할(middleware)
+- thunk는 '지연'의 의미
+- 일반적인 redux와 달리, action 대신에 **함수를 return하는 action creator**를 작성하는 것을 허용
+```js
+const INCREMENT_COUNTER = 'INCREMENT_COUNTER'
+
+// 일반적인 action creator (동기 action creator)
+function increment() {
+  return {
+    type: INCREMENT_COUNTER
+  }
+}
+
+// 함수를 return하는 action creator (비동기 action creator)
+  // incrementAsync를 호출하기 전까지는 return 부분이 실행되지 않음
+function incrementAsync() {
+  return dispatch => {
+    setTimeout(() => {
+      dispatch(increment())
+    }, 1000)
+  }
+}
+```
+- 비동기 action creator의 장점
+  - 하나의 action에서 dispatch를 여러 번 하는 것이 가능
+  - 하나의 비동기 action에 여러 개의 동기 action을 dispatch 할 수 있음
+
+  <br />
+
+### 2. Custom middleware
+- middleware는 삼단함수로 작성
+- 예시: action을 실행하기 전에 console에 log를 찍어주는 middleware
+  ```js
+  const loggerMiddleware = ({ dispatch, getState }) => (next) => (action) => {
+    console.log(action);
+    return next(action);
+  }
+  ```
+
+<br />
+
+### 3. 비동기 요청에서의 REQUEST/SUCCESS/FAILURE
+- 원칙적으로 비동기 요청은 `request`, `success`, `failure` 3단계로 구성함
+```js
+export const loginAction = (data) => {
+  return (dispatch, getState) => {
+    const state = getState(); // combineReducers안에 있는 initialState 반환
+    dispatch(loginRequestAction());
+    axios
+      .post("/api/login")
+      .then((res) => {
+        dispatch(loginSuccessAction(res.data));
+      })
+      .catch((err) => {
+        dispatch(loginFailureAction(err));
+      });
+  };
+};
+
+// 아래 action-generator 6개는 redux-thunk용 
+// 각 요청마다 3개(request, success, failure) 3개씩
+export const loginRequestAction = (data) => {
+  return {
+    type: "LOG_IN_REQUEST",
+    data,
+  };
+};
+
+export const loginSuccessAction = (data) => {
+  return {
+    type: "LOG_IN_SUCCESS",
+    data,
+  };
+};
+
+export const loginFailureAction = (data) => {
+  return {
+    type: "LOG_IN_FAILURE",
+    data,
+  };
+};
+```  
+
+
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.
