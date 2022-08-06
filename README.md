@@ -605,7 +605,7 @@ const result = yield call(logInAPI, action.data);
 ```js
 const result = yield fork(logInAPI, action.data); 
 ```
-요청을 보낸 다음, 결과가 돌아오는 것과 상관 없이 바로 다음 코드가 실행됨(non-blocking)
+요청을 보낸 다음, 결과가 돌아오는 것과 상관 없이 바로 다음 코드가 실행됨(non-blocking) <br />
 따라서 위(1)의 코드에서는 `call`을 사용해야 함
 
 **참고)** saga의 effect들 앞에 `yield` 키워드를 붙여주는 이유 중 하나는, 한 줄씩 실행하며 테스트가 가능하기 때문에 테스트 코드를 이용하여 테스트 시에 편리함
@@ -619,7 +619,7 @@ function* watchLogIn() {
   yield take("LOG_IN_REQUEST", logIn);
 }
 ```
-action을 캐치하여 함수를 실행시키지만, 한 번 실행된 후에는 실행할 수 없음(일회성) 
+action을 캐치하여 함수를 실행시키지만, 한 번 실행된 후에는 실행할 수 없음(일회성) <br />
 즉, 한 번 로그인 한 후에는 다시 로그인 요청을 보낼 수 없음
 
 <br />
@@ -671,24 +671,26 @@ yield delay(1000);
 <br />
 
 #### 4. 디바운싱과 쓰로틀링
-- **디바운싱(debouncing)** : 연속으로 호출되는 함수들 중에 마지막(또는 처음)에 호출되는 함수만 실행되도록 하는 것
-  ex) 브라우저의 resize 이벤트는 브라우저의 크기를 변경하는 중에 계속해서 발생 -> 그때마다 내부 로직이 실행되면 성능 상의 문제 발생 -> 디바운싱
-  ex) 검색 창
-- **쓰로틀링(throttling)** : 마지막 함수가 호출된 후 일정 시간이 지나기 전에 다시 호출되지 않도록 하는 것
-  ex) 스크롤링
+- **디바운싱(debouncing)** : 연속으로 호출되는 함수들 중에 마지막(또는 처음)에 호출되는 함수만 실행되도록 하는 것 <br />
+  ex) 브라우저의 resize 이벤트는 브라우저의 크기를 변경하는 중에 계속해서 발생 -> 그때마다 내부 로직이 실행되면 성능 상의 문제 발생 -> 디바운싱 <br />
+  ex) 검색 창 <br />
+- **쓰로틀링(throttling)** : 마지막 함수가 호출된 후 일정 시간이 지나기 전에 다시 호출되지 않도록 하는 것 <br />
+  ex) 스크롤링 <br />
 
 <br />
 
 #### 5. Workflow 예시(login)
-a. id, password를 입력 후 로그인 버튼 클릭
-b. `LoginForm.js` 내부의 `onSubmitForm()`에 의해 `loginRequestAction({ id, password })`가 실행(dispatch)
-c-1. `sagas\user.js`의 `watchLogIn()`에 걸려서 `logIn` generator가 실행
-c-2. c-1과 동시에 `reducers\user.js`의 switch문 내부의 `LOG_IN_REQUEST`가 실행
-d. `sagas\user.js`의 `logIn` generator 내부의  `yield delay(1000);`에 의해 1초 뒤에 `LOG_IN_SUCCESS`가 disptch
-e. `reducers\user.js`의 switch문 내부의 `LOG_IN_SUCCESS`가 실행
-f. `me`에 데이터가 들어가면서 `isLoggedIn = true` 및 로그인 처리
+a. id, password를 입력 후 로그인 버튼 클릭 <br />
+b. `LoginForm.js` 내부의 `onSubmitForm()`에 의해 `loginRequestAction({ id, password })`가 실행(dispatch) <br />
+c-1. `sagas\user.js`의 `watchLogIn()`에 걸려서 `logIn` generator가 실행 <br />
+c-2. c-1과 동시에 `reducers\user.js`의 switch문 내부의 `LOG_IN_REQUEST`가 실행 <br />
+d. `sagas\user.js`의 `logIn` generator 내부의  `yield delay(1000);`에 의해 1초 뒤에 `LOG_IN_SUCCESS`가 disptch <br />
+e. `reducers\user.js`의 switch문 내부의 `LOG_IN_SUCCESS`가 실행 <br />
+f. `me`에 데이터가 들어가면서 `isLoggedIn = true` 및 로그인 처리 <br />
 
 ___
+
+## Part 07. Immer
 
 
 ___
