@@ -691,6 +691,154 @@ f. `me`에 데이터가 들어가면서 `isLoggedIn = true` 및 로그인 처리
 ___
 
 ## Part 07. Immer
+- 구조가 복잡한 객체도 매우 쉽고 짧은 코드를 사용하여 불변성을 유지하면서 업데이트하는 것을 도와주는 라이브러리
+
+**immer를 사용하지 않을 경우,** 객체의 구조가 깊어지면 코드가 복잡해짐
+```js
+const object = {
+  somewhere: {
+    deep: {
+      inside: 3,
+      array: [1, 2, 3, 4]
+    },
+    bar: 2,
+  },
+  foo: 1
+};
+
+// immer를 사용하지 않고, somewhere.deep.inside 값을 4로 바꾸기
+let nextObject = {
+  ...object,
+  somewhere: {
+    ...object.somewhere,
+    deep: {
+      ...object.somewhere.deep,
+      inside: 4
+    }
+  }
+};
+```
+
+**immer를 사용할 경우,** 스프레드 연산자(`...`)를 사용할 필요가 없고, 다음과 같이 매우 간단해짐
+```js
+// immer를 사용하여, somewhere.deep.inside 값을 4로 바꾸기
+import produce from 'immer';
+const nextObject = produce(object, draft => {
+  // 바꾸고 싶은 값 바꾸기
+  draft.somewhere.deep.inside = 4;
+})
+
+```
+___
+
+## Part 08. Infinite scrolling
+- 컴포넌트가 마운트되면 `LOAD_POST_REQUEST`를 호출하도록 설정
+```js
+// pages\index.js
+...
+const Home = () => {
+  ...
+  useEffect(() => {
+    dispatch({
+      type: LOAD_POST_REQUEST
+    })
+  }, []);
+  ...
+}
+```
+- loadPost에 관련된 reducer 생성
+```js
+// reducers\post.js
+const reducer = (state = initialState, action) => {
+  return produce(state, (draft) => {
+    switch (action.type) {
+      case LOAD_POSTS_REQUEST:
+        draft.loadPostsLoading = true;
+        draft.loadPostsDone = false;
+        draft.loadPostsError = null;
+        break;
+
+      case LOAD_POSTS_SUCCESS:
+        draft.loadPostsLoading = false;
+        draft.loadPostsDone = true;
+        draft.mainPosts = action.data.concat(draft.mainPosts);
+        draft.hasMorePosts = draft.mainPosts.length < 50;
+        // hasMorePosts가 false면 새로운 post를 가져오려는 시도를 하지 않음
+        // 즉, 여기서는 50개까지만 load
+        break;
+
+      case LOAD_POSTS_FAILURE:
+        draft.loadPostsLoading = false;
+        draft.loadPostsError = action.error;
+        break;
+      
+      ...
+```
+
+- `LOAD_POST` saga를 생성
+```js
+// sagas\post.js
+function loadPostsAPI(data) {
+  return axios.get("/api/posts", data);
+}
+
+function* loadPosts(action) {
+  try {
+    yield delay(1000);
+    yield put({
+      type: LOAD_POSTS_SUCCESS,
+      data: generateDummyPost(10),
+    });
+  } catch (err) {
+    yield put({
+      type: LOAD_POSTS_FAILURE,
+      data: err.response.data,
+    });
+  }
+}
+
+...
+
+function* watchLoadPosts() {
+  yield throttle(5000, LOAD_POSTS_REQUEST, loadPosts);
+  // throttle은 응답을 차단할 뿐, 요청 자체를 차단, 취소하지 못함
+  // 따라서 loadPostsLoading이 LOAD_POST_REQUEST시에 true가 되었다가 SUCCESS하면 false가 되므로
+  // loadPostsLoading이 false인 경우에만 LOAD_POST_REQUEST를 dispatch 하도록 함
+  // (중복 Request 차단)
+}
+```
+
+- 스크롤을 어느정도 끝까지 내렸을 때, 새로운 post들을 load 하기
+  - `window.scrollY`: 얼마나 스크롤을 내렸는지 (a)
+  - `document.documentElement.clientHeight`: 화면이 보이는 길이 (b)
+  - `document.documentElement.scrollHeight`: 총 길이 (c)
+  - **끝까지 내렸을 때: a + b = c**
+  <br />
+  - useEffect에서 addEventListener할 때에는 반드시 removeEventListner를 return해서 스크롤 했던 것을 해제
+
+```js
+// pages\index.js
+useEffect(() => {
+    function onScroll() {
+       if (window.scrollY + document.documentElement.clientHeight 
+        > document.documentElement.scrollHeight - 300) {
+          // loadPostsLoading이 false인 경우에만 LOAD_POST_REQUEST를 dispatch 하도록 함
+        if (hasMorePosts && !loadPostsLoading) {
+          dispatch({
+            type: LOAD_POSTS_REQUEST,
+          });
+        }
+      }
+    }
+    window.addEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [hasMorePosts, loadPostsLoading]);
+  ```
+
+참고) 계속된 스크롤로 메모리가 찰 경우(모바일의 경우에 데스크탑보다 쉽게 참)를 대비해서 react-virtualized를 사용
+  - react-virtualized: 화면에는 3-4개의 post밖에 띄우지 못하므로, 3-4개의 post만 화면에 그려주고 나머지는 메모리에 저장시킴
 
 
 ___
