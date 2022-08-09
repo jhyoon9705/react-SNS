@@ -1014,6 +1014,52 @@ db.Sequelize = Sequelize;
 module.exports = db;
 ```
 
+#### 4. Sequelize 모델 만들기
+- `sequelize.define()`으로 모델 생성
+- sequelize로 모델(mysql에서의 테이블) 이름을 정의하면, mysql에는 자동으로 소문자화 및 복수화 되어 테이블 생성 (User → users)
+- **첫 번째 객체: 모델 정의**
+  - 타입 검사는 js로 하지만 db에서도 `DataTypes`를 이용하여 기본적인 검사 수행
+    - STRING, TEXT, BOOLEAN, INTEGER, FLOAT, DATETIME, ...
+  - 필수 항목일 경우, 해당항목에 `allowNull: false` 설정
+  - 중복되어서는 안되는 고유한 값이어야할 경우, 해당 항목에 `unique: true` 설정
+  - id는 mysql에서 자동으로 1, 2, 3, .. 으로 기본 삽입됨
+  - 두 번째 객체는 모델에 대한 setting
+- **두 번째 객체: 모델에 대한 setting**
+  - 한글 사용: `charset: 'utf8', collate: 'utf8_general_ci'`
+  - 한글 + 이모티콘 사용: `charset: 'utf8mb4', collate: 'utf8mb4_general_ci'`
+- 테이블 간의 관계 정보는 `User.associate = (db) => {};`에 작성
+  ex) user가 작성한 comment 정보
+  
+
+**예시)** <br />
+
+```js
+// models\user.js
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define('User', { 
+    // id 기본 삽입(1, 2, ...)
+    email: {
+      type: DataTypes.STRING(30), // String 30자 이내
+      allowNull: false, // 필수 여부
+      unique: true, // 고유값 여부
+    },
+    nickname: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING(100), // 비밀번호는 암호화하므로 길이를 넉넉하게
+      allowNull: false,
+    },
+  }, {
+    charset: 'utf8',
+    collate: 'utf8_general_ci' 
+  });
+  User.associate = (db) => {};
+
+  return User;
+}
+```
 
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.
