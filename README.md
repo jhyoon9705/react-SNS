@@ -967,6 +967,53 @@ const postRouter = require('./routes/post');
 ...
 app.use('/post', postRouter); // post가 prefix
 ```
+___
+
+## Part 11. Sequelize
+### 1. Sequelize란?
+- DB 작업을 쉽게 할 수 있도록 도와주는 ORM 라이브러리
+  - ORM(Object-Releational Mapping): js 객체와 RDB를 서로 연결해주는 도구
+
+### 2. Sequelize 설치하기
+#### 1. 패키지 설치
+> npm i sequelize sequelize-cli mysql3
+> npx sequelize init // sequelize 세팅
+
+#### 2. 비밀번호, DB 이름, port 번호 설정
+- config\config.json 내부에 mysql 비밀번호 입력
+```js
+"development": {
+    "username": "root",
+    "password": "mypassword", // here
+    "database": "react-SNS", // here
+    "host": "127.0.0.1",
+    "port": "3306", // here (mysql port)
+    "dialect": "mysql"
+  },
+```
+
+#### 3. `models/index.js` 파일 수정
+```js
+const Sequelize = require('sequelize');
+const env = process.env.NODE_ENV || 'development'; // 배포 시에는 'production', 개발 시에는 'development'
+const config = require('../config/config')[env]; // config\config.json 파일에서 development 부분을 가져옴
+const db = {};
+
+// sequelize가 node와 mysql을 연결해줌
+const sequelize = new Sequelize(config.database, config.username, config.password, config);
+
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
+
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
+
+module.exports = db;
+```
+
 
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.
