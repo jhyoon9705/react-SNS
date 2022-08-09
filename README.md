@@ -5,6 +5,7 @@ ___
  - **Front**: React, Next.js (+ Redux, Redux-saga (Redux-thunk))
  - **Back**:  
 ___
+## [Front-end]
 
 ## Part 01. Screen Configuration (+ Custom hook)
 ### 1. Grid system
@@ -840,6 +841,132 @@ useEffect(() => {
 참고) 계속된 스크롤로 메모리가 찰 경우(모바일의 경우에 데스크탑보다 쉽게 참)를 대비해서 react-virtualized를 사용
   - react-virtualized: 화면에는 3-4개의 post밖에 띄우지 못하므로, 3-4개의 post만 화면에 그려주고 나머지는 메모리에 저장시킴
 
+___
+## [Back-end]
+## Part 09. Running the server with node.js
+### 1. 프론트 서버와 백 서버를 나누는 이유
+- 앱의 규모가 커졌을 떄를 대비하기 위함
+- 서버(컴퓨터) 하나에 프론트, 백 서버를 모두 두는 경우
+  - 프론트는 SSR을, 백은 API를 제공
+  - 프론트와 백엔드의 요청량이 비대칭일 경우(ex. 프론트는 1초에 1000, 백은 1초에 10)
+  - 메모리나 CPU 부족하면 스케일링(Scaling)을 하게 됨(서버를 통째로 즉, 프론트와 백을  함께 복사 → 프론트의 1000만큼의 요청을 2대의 컴퓨터가 나누어 받음)
+  - 쓸데없는 백엔드 서버까지 복사하게 되므로 공간 낭비 발생
+  - 따라서, 대규모 서비스의 경우 각 기능별로 서버를 나누어주는 경우가 많음
+  
+<br />
+
+### 2. 서버 실행 기본 코드
+```js
+// back\app.js
+// node app.js로 실행
+const http = require('http');
+const server = http.createServer((req, res) => {
+  console.log(req.url, req.method);
+  res.write('Hello node1'); // 내부에 html도 작성 가능
+  res.write('Hello node2');
+  res.end('Hello node3');
+})
+server.listen(3065, () => {
+  console.log('서버 실행 중')
+});
+```
+
+- 서버 실행 후, `localhost:3065` 접속 시 `Hello node1Hello node2Hello node3` 출력
+- `req`: 브라우저나 프론트 서버에서 온 요청에 대한 정보
+- `res`: 응답에 대한 정보
+<br />
+- 프론트 서버나 브라우저가 요청을 1회 보내면, 서버에서 응답 1회가 필수
+- 서버가 응답을 안 보낼 경우, 특정 시간 후에 브라우저가 자동으로 '응답 실패'로 처리 
+- 여러 개의 데이터가 필요한 경우
+  - 1회 요청을 보냈을 때, 여러 개의 데이터를 묶어서 한번에 보내거나
+  - 요청을 여러 번 보내서, 응답을 여러 번 받음
+  - 요청 1회에 응답을 2회 이상 보내면 안됨
+
+___
+
+## Part 10. Routing with express
+### 0. REST API (Representational State Transfer API)
+- REST?
+- 자원의 이름으로 구분하여 해당 자원의 상태(정보)를 주고 받는 모든 것을 의미
+- 즉, 자원(resource)의 표현(representation)에 의한 상태 전달
+- A. 자원의 표현
+  - ex) DB의 학생 정보가 자원일 때, 'student'를 자원의 표현으로 정함
+- B. 상태(정보) 전달
+  - 데이터가 요청되어지는 시점에 자원의 상태(정보)를 전달
+  - JSON 혹은 XML을 통해 데이터를 주고 받는 것이 일반적
+- HTTP URL을 통해 자원을 명시하고 HTTP Method(POST, GET, etc.)를 통해 해당 자원에 대한 CRUD Opertation을 적용하는 것을 의미
+- CRUD Operation
+  - Create: 생성(POST)
+  - READ: 조회(GET)
+  - Update: 수정(PUT)
+  - Delete: 삭제(DELETE)
+  - header 정보 조회: (HEAD)
+- REST가 필요한 이유
+  - 애플리케이션 분리 및 통합
+  - 다양한 클라이언트의 등장
+
+<br />
+
+- REST API?
+- REST 기반으로 서비스 API를 구현하는 것
+
+### 1. Express
+#### 1. Express 기본 코드
+- 브라우저의 주소창에 입력하는 것은 `GET` 요청
+- `res.send`: 문자열로 응답
+- `res.json`: json 객체로 응답
+
+```js
+const express = require('express');
+
+const app = express();
+
+// localhost:3065/api -> hello api 응답
+app.get('/api', (req, res) => {
+  res.send('hello api');
+})
+
+// localhost:3065/api/posts -> 아래의 객체로 응답
+app.get('/api/posts', (req, res) => {
+  res.json([
+    { id: 1, content: 'hello'},
+    { id: 2, content: 'hello2'},
+    { id: 3, content: 'hello3'},
+  ]);
+});
+
+app.listen(3065, () => {
+  console.log('서버 실행 중')
+});
+```
+
+<br />
+
+#### 2. Express로 라우터 분리하기
+- 공통되는 주소들은 `routes` 폴더 안에 하나의 파일로 분리
+- 공통 부분은 제거하고, 그 부분을 `app.js` 파일에서 `.use()`로 prefix 설정 및 사용
+```js
+// routes\post.js
+const express = require('express');
+
+const router = express.Router();
+router.post('/', (req, res) => { // POST /post
+  res.json({id: 1, content: 'hello'});
+});
+
+router.delete('/', (req, res) => { // DELETE /post
+  res.json({id: 1});
+});
+
+module.exports = router;
+```
+
+```js
+// back\app.js
+const postRouter = require('./routes/post');
+...
+app.use('/post', postRouter); // post가 prefix
+```
 
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.
