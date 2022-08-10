@@ -1028,7 +1028,7 @@ module.exports = db;
   - 한글 사용: `charset: 'utf8', collate: 'utf8_general_ci'`
   - 한글 + 이모티콘 사용: `charset: 'utf8mb4', collate: 'utf8mb4_general_ci'`
 - 테이블 간의 관계 정보는 `User.associate = (db) => {};`에 작성
-  ex) user가 작성한 comment 정보
+  - ex) user가 작성한 comment 정보
   
 
 **예시)** <br />
@@ -1060,6 +1060,44 @@ module.exports = (sequelize, DataTypes) => {
   return User;
 }
 ```
+
+#### 5. Sequelize 관계 설정하기
+- **`modelName.associate = (db) => {}`** 로 sequelize 관계 설정 
+<br />
+
+**<관계 표현>** <br />
+  - **일대다(다대일) 관계**:  **`hasMany()`**, **`belongsTo()`**
+    - ex) User는 여러 개의 Post를 가질 수 있음
+    - `db.User.hasMany(db.Post);`
+    - `db.Post.belongsTo(db.User)`
+  - **다대다 관계**: **`belongsToMany()`**
+    - ex) 한 Post에 여러 User가 좋아요를 남길 수 있음
+    - `db.Post.belongsToMany(db.User);`
+  - **일대일 관계**: **`hasOne()`**, **`belongsTo()`**
+    - ex) 한 User는 하나의 UserInfo을 가짐
+    - `db.User.hasOne(UserInfo)`
+    - `UserInfo.belongsTo(User)`
+
+<br />
+
+**<옵션>** <br />
+- `belongsTo()`, `belongsToMany()`를 사용한 쪽에는 id(테이블명+id)가 생성됨
+  - ex) `db.Post.belongsTo(db.User)` 일 때, Post에 UserId가 생성
+    - UserId: 1 => 1번 User가 작성한 Post
+  - 이때, **`as`** 옵션을 사용하면 테이블의 별칭 지정과 생성되는 id 컬럼의 이름을 설정할 수 있음
+    - ex) `db.User.belongsToMany(db.Post, { as: 'Liked' });` // User 테이블에 Liked라는 별칭이 붙고, 그에 따라 User 테이블에 UserId 대신 LikedId가 생성
+- `belongsToMany()`로 관계가 설정되었을 떄는 새로운 junction table이 생성 
+  - junction table 이름은 두 테이블의 이름을 붙임
+    - ex) `db.Hastag.belongsToMany(db.Post)` : PostHashtag 테이블 생성
+  - junction table의 컬럼명은 '테이블+id`로 생성됨
+    - ex) `db.Hastag.belongsToMany(db.Post)` : junction table에 HastagId와 PostId 컬럼 생성
+  - **`through`** 옵션으로 junction table의 이름 설정 가능
+  - ex) `db.Post.belongsToMany(db.User, { through: 'Like' });` // 게시글과 사용자의 좋아요 관계
+    - juction table이 UserPost 대신에 Like로 생성
+- 다음과 같은 자기 참조의 경우에, junction table 생성 시 UserId라는 컬럼이 2개 생기게 되므로 구별을 위해 **`foreignKey`** 옵션으로 컬럼 이름을 변경 필요
+  - ex) `db.User.belongsToMany(db.User, { through: 'Follow', as: 'Followings', foreignKey: 'FollowerId'});`
+  - `db.User.belongsToMany(db.User, { through: 'Follow', as: 'Followers', foreignKey: 'FollowingId'});`
+
 
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.

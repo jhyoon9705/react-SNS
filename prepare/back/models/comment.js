@@ -9,7 +9,13 @@ module.exports = (sequelize, DataTypes) => {
     charset: 'utf8mb4', // 한글 사용
     collate: 'utf8mb4_general_ci' // 한글 사용
   });
-  Comment.associate = (db) => {};
+  Comment.associate = (db) => {
+    db.Comment.belongsTo(db.User); // Comment User에 속해있음
+    db.Comment.belongsTo(db.Post);
+    // belongsTo는 Comment 테이블에 UserId, PostId라는 column을 만들어줌 
+    // ex) UserId: 1 => 1번 User가 단 Comment
+    // ex) PostId: 3 => 3번 Post에 달린 Comment
+  };
 
   return Comment;
 }

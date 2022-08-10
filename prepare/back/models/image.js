@@ -9,7 +9,9 @@ module.exports = (sequelize, DataTypes) => {
     charset: 'utf8', // 한글 사용
     collate: 'utf8_general_ci' // 한글 사용
   });
-  Image.associate = (db) => {};
+  Image.associate = (db) => {
+    db.Image.belongsTo(db.Post);
+  };
 
   return Image;
 }

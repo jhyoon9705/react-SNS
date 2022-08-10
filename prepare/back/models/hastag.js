@@ -9,7 +9,11 @@ module.exports = (sequelize, DataTypes) => {
     charset: 'utf8mb4', // 한글 사용
     collate: 'utf8mb4_general_ci' // 한글 사용
   });
-  Hastag.associate = (db) => {};
+  Hastag.associate = (db) => {
+    db.Hastag.belongsToMany(db.Post); // 다대다 관계
+    // belongsToMany는 ex) PostHashtag라는 별도의 테이블이 생기고,
+    // HastagId와 PostId 컬럼이 생성
+  };
 
   return Hastag;
 }

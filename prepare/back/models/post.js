@@ -9,7 +9,15 @@ module.exports = (sequelize, DataTypes) => {
     charset: 'utf8mb4', // 한글 사용, mb4는 이모티콘 포함
     collate: 'utf8mb4_general_ci' // 한글 사용
   });
-  Post.associate = (db) => {};
+  Post.associate = (db) => {
+    db.Post.belongsTo(db.User); // Post는 User에 속해있음
+    db.Post.hasMany(db.Comment);
+    db.Post.hasMany(db.Image);
+    db.Post.belongsTo(db.Post, { as: 'Retweet'}); // 리트윗 PostId가 아닌 RetweetId가 생성
+    db.Post.belongsToMany(db.HashTag); // 다대다 관계
+    db.Post.belongsToMany(db.User, { through: 'Like', as: 'Likers' }); // 게시글과 사용자의 좋아요 관계, as로 구별(별칭)
+    // cf) 일대일관계: hasOne => User.hasOne(UserInfo), UserInfo.belongsTo(User) / belongsTo쪽에 id가 생김
+  };
 
   return Post;
 }
