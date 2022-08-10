@@ -910,6 +910,11 @@ ___
 - REST API?
 - REST 기반으로 서비스 API를 구현하는 것
 
+<br />
+참고) API 문서 자동화 Tool: Swagger
+
+<br />
+
 ### 1. Express
 #### 1. Express 기본 코드
 - 브라우저의 주소창에 입력하는 것은 `GET` 요청
@@ -974,7 +979,7 @@ ___
 - DB 작업을 쉽게 할 수 있도록 도와주는 ORM 라이브러리
   - ORM(Object-Releational Mapping): js 객체와 RDB를 서로 연결해주는 도구
 
-### 2. Sequelize 설치하기
+### 2. Sequelize 사용하기
 #### 1. 패키지 설치
 > npm i sequelize sequelize-cli mysql3
 > npx sequelize init // sequelize 세팅
@@ -1087,8 +1092,6 @@ module.exports = (sequelize, DataTypes) => {
   - 이때, **`as`** 옵션을 사용하면 테이블의 별칭 지정과 생성되는 id 컬럼의 이름을 설정할 수 있음
     - ex) `db.User.belongsToMany(db.Post, { as: 'Liked' });` // User 테이블에 Liked라는 별칭이 붙고, 그에 따라 User 테이블에 UserId 대신 LikedId가 생성
 - `belongsToMany()`로 관계가 설정되었을 떄는 새로운 junction table이 생성 
-  - junction table 이름은 두 테이블의 이름을 붙임
-    - ex) `db.Hastag.belongsToMany(db.Post)` : PostHashtag 테이블 생성
   - junction table의 컬럼명은 '테이블+id`로 생성됨
     - ex) `db.Hastag.belongsToMany(db.Post)` : junction table에 HastagId와 PostId 컬럼 생성
   - **`through`** 옵션으로 junction table의 이름 설정 가능
@@ -1098,6 +1101,62 @@ module.exports = (sequelize, DataTypes) => {
   - ex) `db.User.belongsToMany(db.User, { through: 'Follow', as: 'Followings', foreignKey: 'FollowerId'});`
   - `db.User.belongsToMany(db.User, { through: 'Follow', as: 'Followers', foreignKey: 'FollowingId'});`
 
+#### 6. Sequelize sync
+- 모델 생성한 것을 불러오기
+- 다음과 같이 실행하면 설계한 테이블(모델)들이 만들어짐
+```js
+// models\index.js
+db.Comment = require('./comment')(sequelize, Sequelize);
+db.Post = require('./post')(sequelize, Sequelize);
+...
+```
+- 아래의 코드는 반복문을 돌면서 associate 관계들을 연결(각 모델 파일 안의 associate 실행)
+```js
+// models\index.js
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
+```
+**여기까지 sequelize에서 모델들 설계 및 등록 완료** 
+<br />
+<br />
+
+**이제부터 express에서 sequelize를 등록하기**
+<br />
+
+```js
+// back\app.js
+...
+const db = require('./models');
+
+db.sequelize,sync()
+  .then(() => {
+    console.log('DB 연결 성공');
+  })
+  .catch(console.error);
+```
+
+- 프로젝트 DB 처음 생성하기
+  > npx sequelize db:create
+
+
+#### 7. nodemon
+- 코드를 바꾸면 서버를 다시 껐다가 켜야하는 번거로움이 있음
+- nodemon을 사용하면 코드를 수정했을 때, 알아서 서버를 재실행함
+  > npm i -g nodemon
+- `nodemon app`으로 실행
+- package.json에 다음과 같이 추가하면 `nodemon app` 대신 `npm run dev`로 실행 가능
+  ```js
+  {
+    ...
+    "scripts": {
+      ...,
+      "dev": "nodemon app"
+    },
+  }
+  ```
 
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.

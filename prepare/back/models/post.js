@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     db.Post.hasMany(db.Comment);
     db.Post.hasMany(db.Image);
     db.Post.belongsTo(db.Post, { as: 'Retweet'}); // 리트윗 PostId가 아닌 RetweetId가 생성
-    db.Post.belongsToMany(db.HashTag); // 다대다 관계
+    db.Post.belongsToMany(db.Hashtag, { through: 'PostHashtag'}); // 다대다 관계
     db.Post.belongsToMany(db.User, { through: 'Like', as: 'Likers' }); // 게시글과 사용자의 좋아요 관계, as로 구별(별칭)
     // cf) 일대일관계: hasOne => User.hasOne(UserInfo), UserInfo.belongsTo(User) / belongsTo쪽에 id가 생김
   };

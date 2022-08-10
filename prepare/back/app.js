@@ -1,6 +1,13 @@
 const express = require('express');
 const postRouter = require('./routes/post');
 const app = express();
+const db = require('./models');
+
+db.sequelize.sync()
+  .then(() => {
+    console.log('DB 연결 성공');
+  })
+  .catch(console.error);
 
 // 브라우저의 주소창에 입력하는 것은 GET 요청
 app.get('/', (req, res) => {
