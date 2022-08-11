@@ -1,4 +1,4 @@
-import { all, fork, put, delay, takeLatest } from "redux-saga/effects";
+import { all, fork, put, delay, takeLatest, call } from "redux-saga/effects";
 import {
   LOG_IN_SUCCESS,
   LOG_OUT_SUCCESS,
@@ -68,16 +68,16 @@ function* logOut() {
   }
 }
 
-function signUpAPI() {
-  return axios.post("/api/logout");
+function signUpAPI(data) {
+  return axios.post("http://localhost:3065/user", data);
 }
 
-function* signUp() {
+function* signUp(action) {
   try {
-    // const result = yield call(signUpAPI); // fork를 쓰면 비동기, call은 동기 함수 호출
-
-    // 서버 만들기 전 (for dev), delay effect로 비동기적인 효과 사용
-    yield delay(1000);
+    const result = yield call(signUpAPI, action.data); // fork를 쓰면 비동기, call은 동기 함수 호출
+    
+    // // 서버 만들기 전 (for dev), delay effect로 비동기적인 효과 사용
+    // yield delay(1000);
 
     yield put({
       type: SIGN_UP_SUCCESS,
