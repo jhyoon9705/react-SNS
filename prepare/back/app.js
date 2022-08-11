@@ -3,6 +3,7 @@ const postRouter = require('./routes/post');
 const userRouter = require('./routes/user');
 const app = express();
 const db = require('./models');
+const cors = require('cors');
 
 db.sequelize.sync()
   .then(() => {
@@ -10,6 +11,10 @@ db.sequelize.sync()
   })
   .catch(console.error);
 
+  app.use(cors({
+    origin: '*',
+    credentials: true,
+  })); // 모든 요청 허용(CORS 문제 해결)
   // 위 코드 두줄은 다른 router들보다 위에 작성(코드 진행이 순차적임)
   app.use(express.json()); // 프론트에서 받은 데이터들을 req.body에 넣어줌
   app.use(express.urlencoded({extended: true})); // 프론트에서 받은 데이터들을 req.body에 넣어줌

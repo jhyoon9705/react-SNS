@@ -1157,6 +1157,42 @@ db.sequelize,sync()
     },
   }
   ```
+___
+
+## Part 12. Server implementation
+### 1. CORS problem
+#### 1-1. CORS(Cross-Origin Resource Sharing)?
+- 브라우저 도메인(포트, ex. 3000)과 백엔드 서버 도메인(ex. 3065)이 서로 다르면 브라우저가 요청을 차단
+- 브라우저를 변조해주면 CORS error가 발생하지 않지만, 대부분의 경우 임의의 사용자의 브라우저를 변조할 수 없음
+- 따라서, 브라우저 도메인(ex. 3000)에서 서버 도메인(ex. 3065)로 요청을 보낼 수 있도록 허용을 해주어야 함
+- 단, 프론트 서버에서 백엔드 서버로와 같이 서버에서 서버로 보낼 떄는 CORS error가 발생하지 않음
+- 이를 이용하여 **Proxy** 방식을 사용하여 CORS 문제를 해결할 수 있음
+
+#### 1-2. Proxy
+- CORS 에러는 서로 도메인이 다른, 브라우저에서 서버로 보낼 때만 발생(서버에서 서버로 보낼 때는 발생 X)
+- 이를 이용하여 브라우저에서 프론트 서버로 보낸 후(브라우저와 프론트는 도메인이 같음), 프론트 서버에서 백 서버로 보냄
+- 응답을 받을 때에는 백 서버 → 프론트 서버 → 브라우저
+
+#### 1-3. CORS 허용 header 적용하기
+```js
+// back\routes\user.js
+res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3060') // CORS 문제 해결, 3060 허용
+// res.setHeader('Access-Control-Allow-Origin', '*') // 모든 서버 허용 
+```
+
+#### 1-4. 미들웨어 사용
+- `npm i cors`
+```js
+// back\app.js
+app.use(cors({
+  origin: '*',
+  credentials: true,
+})); // 모든 요청 허용(CORS 문제 해결)
+```
+- `*` 자리에 허용할 주소 설정 가능
+
+
+
 
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.

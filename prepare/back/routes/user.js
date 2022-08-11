@@ -27,4 +27,4 @@ router.post('/', async (req, res, next) => { // POST /user/
  
 });
 
-module.exports.router;
+module.exports = router;
