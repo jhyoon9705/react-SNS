@@ -22,21 +22,18 @@ import axios from "axios";
 // test 시에 편리 (한줄씩 실행하며 테스트가 가능)
 
 function logInAPI(data) {
-  return axios.post("/api/login", data);
+  return axios.post("/user/login", data);
 }
 
 function* logIn(action) {
   try {
-    // // 나중에 서버 만들면 사용
-    // const result = yield call(logInAPI, action.data); // fork를 쓰면 비동기, call은 동기 함수 호출
-    // // fork와 call의 두 번째 인자부터는 매개변수 = loginAPI(action.data)
-
-    // 서버 만들기 전 (for dev), delay effect로 비동기적인 효과 사용
-    yield delay(1000);
+    // 나중에 서버 만들면 사용
+    const result = yield call(logInAPI, action.data); // fork를 쓰면 비동기, call은 동기 함수 호출
+    // fork와 call의 두 번째 인자부터는 매개변수 = loginAPI(action.data)
 
     yield put({
       type: LOG_IN_SUCCESS,
-      data: action.data,
+      data: result.data,
     });
   } catch (err) {
     yield put({
@@ -47,7 +44,7 @@ function* logIn(action) {
 }
 
 function logOutAPI() {
-  return axios.post("/api/logout");
+  return axios.post("/user/logout");
 }
 
 function* logOut() {
@@ -69,7 +66,7 @@ function* logOut() {
 }
 
 function signUpAPI(data) {
-  return axios.post("http://localhost:3065/user", data);
+  return axios.post("/user", data);
 }
 
 function* signUp(action) {

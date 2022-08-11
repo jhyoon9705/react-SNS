@@ -1,7 +1,28 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const passport = require('passport');
 const { User } = require('../models'); // db.User
 const router = express.Router();
+
+// err, user, info는 done()의 인자
+router.post('/login',(req, res, next) => { // 미들웨어 확장(req, res, next를 사용하기 위함)
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.error(err);
+      return next(err);
+    }
+    if (info) {
+      return res.status(401).send(info.reason);
+    }
+    return req.login(user, async (loginErr) => { // passport 로그인
+      if (loginErr) {
+        console.error(loginErr);
+        return next(loginErr);
+      }
+      return res.json(user); // 로그인 완료, 사용자 정보를 프론트로 넘겨줌
+    })
+  })(req, res, next);
+});
 
 router.post('/', async (req, res, next) => { // POST /user/
   try {
