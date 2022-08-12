@@ -9,7 +9,7 @@ module.exports = () => {
     passwordField: 'password', // req.body.password
   }, async (email, password, done) => {
     try {
-      const user = await User.fineOne({
+      const user = await User.findOne({
         where: { email } // = {email: email}
       });
       if (!user) {
@@ -24,6 +24,6 @@ module.exports = () => {
       console.error(error);
       return done(error);
     }
-    
+
   }));
 }
