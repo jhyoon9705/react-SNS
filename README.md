@@ -1191,6 +1191,185 @@ app.use(cors({
 ```
 - `*` 자리에 허용할 주소 설정 가능
 
+<br />
+
+### 2. Passport
+#### 2-1. Passport란?
+- node.js 미들웨어로서 사용자 인증을 구현
+- 페이스북, 카카오, 이메일 등 다양한 passport가 있음
+- `npm i passport passport-local`
+
+#### 2-2. Passport 세팅
+- passport 생성 후, `index.js`파일(passport 설정파일) 생성
+```js
+const passport = require('passport');
+const local = require('./local');
+
+module.exports = () => {
+  passport.serializeUser(() => {
+
+  });
+
+  passport.deserializeUser(() => {
+
+  });
+
+  local();
+};
+```
+
+#### 2-3. 로컬 로그인 전략
+- `passport\local.js` 파일 생성
+  - `new LocalStrategy()` 내부의 객체: req.body 부분으로 설정
+  - `new LocalStrategy()` 내부의 함수: 객체에서 받은 인자를 그대로 가져와서 사용
+  - `done(a, b, c)`
+    - a: 서버 에러, b: 성공 여부, c: 클라이언트 에러(보내는 쪽에서 잘못 보냄)
+    - 비동기 함수이므로 `async`, try-catch문 사용
+- `bcrypt`: 사용자 비밀번호를 암호문으로 변경
+  - `compare()`로 비밀번호 일치여부 판단 가능
+
+```js
+const passport = require('passport');
+const { Strategy: LocalStrategy } = require('passport-local');
+const bcrypt = require('bcrpyt');
+const { User } = require('../models');
+
+module.exports = () => {
+  passport.use(new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password',
+  }, async (email, password, done) => {
+    try {
+      const user = await User.fineOne({
+        where: { email } // = {email: email}
+      });
+      if (!user) {
+        return done(null, false, { reason: '존재하지 않는 사용자입니다.'});
+      }
+      const result = await bcrypt.compare(password, user.password);
+      if (result) {
+        return done(null, user);
+      }
+      return done(null, false, { reason: '비밀번호가 틀렸습니다.'});
+    } catch (error) {
+      console.error(error);
+      return done(error);
+    }
+
+  }));
+}
+```
+
+#### 2-4. Passport 설정 적용
+- `passport\index.js`에서 설정한 내용을 프로젝트에 적용
+```js
+// back\app.js
+const passportConfig = require('./passport');
+passportConfig();
+```
+
+#### 2-5. Login API에 적용
+- LocalStrategy의 `done()`이 콜백함수의 역할을 해서 각 인자들을 return함
+  ex) `passport.authenticate('local', (err, user, info))`
+    - err: 서버 에러
+    - user: 성공하면 data, 실패하면 false
+    - info: 클라이언트 에러
+```js
+const passport = require('passport');
+
+router.post('/login', passport.authenticate('local', (err, user, info) => {
+        if(err){
+            console.error(err);
+            next(err);
+        }
+});
+```
+- 위와 같이 할 경우, `req`, `res`, `next`를 사용할 수 없으므로 아래와 같이 미들웨어 확장을 함
+```js
+router.post('/login',(req, res, next) => { // 미들웨어 확장(req, res, next를 사용하기 위함)
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.error(err);
+      return next(err);
+    }
+    if (info) {
+      return res.status(401).send(info.reason);
+    }
+    return req.login(user, async (loginErr) => { // passport 로그인
+      if (loginErr) {
+        console.error(loginErr);
+        return next(loginErr);
+      }
+      return res.json(user); // 로그인 완료, 사용자 정보를 프론트로 넘겨줌
+    })
+  })(req, res, next);
+})
+```
+
+#### 2-6. `.env` 설정
+- 개발자 혼자 또는 팀만 알아야 하는 값들을 환경변수 파일을 외부에 만들어 소스코드 내에 하드코딩 하지 않고 사용 가능하도록 도와줌
+- `npm i dotenv`
+- config.json에서는 dotenv 사용이 불가하므로 config.js로 변경 후 `module.exports` 하여 사용 
+- `.env` 파일 생성
+```js
+// .env 예시
+COOKIE_SECRET=sample
+DB_PASSWORD=password
+```
+- 코드 내에서는 `const dotenv = require('dotenv')`와 `dotenv.config()`한 후, `process.env.COOKIE_SECRET` 등으로 사용
+
+#### 2-7. Cookie & Session
+- `npm i cookie-parser express-session`
+- 로그인을 하면 브라우저와 서버는 같은 정보를 가지고 있어야 함
+- 서버에서 로그인 정보(비밀번호 등)를 브라우저로 보내면 보안상 위험하므로 쿠키로 대체하여 보내주고 쿠키를 저장(쿠키를 세션과 연결)
+- 세션: 서버 쪽이 쿠키와 로그인 정보 등을 통째로 들고 있는 것
+- 이때, 서버 쪽에서는 메모리를 아끼기 위해 쿠키와 아이디(ex. 1, 2, 3, ...)만을 저장해두고, 나중에 브라우저에서 쿠키를 보내면 DB에서 데이터를 복구
+  - ex) 1번 아이디를 가지고 있는 데이터를 DB에서 가지고 옴
+```js
+// back\app.js
+  app.use(cookieParser(process.env.COOKIE_SECRET));
+  app.use(session({
+    saveUninitialized: false,
+    resave: false,
+    secret: process.env.COOKIE_SECRET, // 쿠키를 만들어내는 시크릿키(노출되면 안됨)
+  }));
+  app.use(passport.initialize());
+  app.use(passport.session());
+  ```
+
+```js
+// passport\index.js
+const passport = require('passport');
+const local = require('./local');
+const {User} = require('../models');
+
+module.exports = () => {
+  passport.serializeUser((user, done) => { // user: req.login()의 user
+    done(null, user.id);
+  });
+
+  // 로그인을 성공한 후, 그 다음 요청부터 id로 DB로부터 사용자 정보를 복구해냄
+  passport.deserializeUser(async (id, done) => {
+    try{
+      const user = await User.findOne({ where: {id}});
+      done(null, user); // 사용자 정보를 복구하여 req.user에 넣어줌
+    } catch(error) {
+      console.error(error);
+      done(error);
+    }
+  });
+  local();
+};
+```
+
+#### 2-8. Passport LocalStrategy 실행 흐름
+1. login을 담당하는 라우터의 콜백함수에 의해 `passport.authenticate(local, callback)`가 실행 <br />
+2. `LocalStrategy` 생성자에 전달된 콜백함수가 실행 <br />
+3. `passport.serializeUser()` 실행 <br />
+4. session 객체 내부 `passport` 프로퍼티에 cookie와 식별자를 매칭시켜 보관 <br />
+5. 다음 매 요청시마다 `passport.deserializeUser()`가 실행되어 session 객체에 저장된 식별자를 통해 user에 대한 데이터를 찾가 `req.user`에 넣어줌
+
+
 
 
 

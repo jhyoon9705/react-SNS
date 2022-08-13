@@ -17,7 +17,7 @@ db.sequelize.sync()
     console.log('DB 연결 성공');
   })
   .catch(console.error);
-  passportConfig();
+  passportConfig(); // passport 설정 적용
 
   app.use(cors({
     origin: '*',
