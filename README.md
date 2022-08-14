@@ -1370,6 +1370,8 @@ module.exports = () => {
 5. 다음 매 요청시마다 `passport.deserializeUser()`가 실행되어 session 객체에 저장된 식별자를 통해 user에 대한 데이터를 찾가 `req.user`에 넣어줌
 
 
+#### 2-9. 로그인 문제 해결하기
+- 단순히 내 정보만 불러왔을 떄는 내가 작성한 Post, Comment, Followers 등을 알 수 없음
 
 
 
