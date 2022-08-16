@@ -1372,8 +1372,44 @@ module.exports = () => {
 
 #### 2-9. 로그인 문제 해결하기
 - 단순히 내 정보만 불러왔을 떄는 내가 작성한 Post, Comment, Followers 등을 알 수 없음
-
-
+- `models\user.js`에서 해당 모델(여기서는 `User`)과의 관계를 설정해놓은 다른 모델들에서 데이터를 불러올 수 있음
+  - `attributes`: 원하는 정보를 포함시키거나 제외시킬 수 있음
+  - `include`: 모델 포함시키기
+```js
+// routes\user.js
+router.post('/login',(req, res, next) => { // 미들웨어 확장(req, res, next를 사용하기 위함)
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.error(err);
+      return next(err);
+    }
+    if (info) {
+      return res.status(401).send(info.reason);
+    }
+    return req.login(user, async (loginErr) => { // passport 로그인
+      ...
+      const fullUserWithoutPassword = await User.findOne({
+        where: { id: user.id },
+        attributes: //['id', 'nickname', 'email'], // 원하는 정보만 보냄
+        {
+          exclude: ['password'], // 원하는 정보만 보내지 않음
+        },
+        include: [{ // 포함시키기
+          model: Post, // models\user.js에서 관계설정 한 모델들
+          // hasMany라서 model:Post가 복수형이 되어 me.Posts가 됨
+        }, {
+          model: User,
+          as: 'Followings', // 모델에서 as를 썼으면 include 할 때에도 as를 써줘야 함
+        }, {
+          model: User,
+          as: 'Followers',
+        }]
+      })
+      return res.status(200).json(fullUserWithoutPassword); // 로그인 완료, 사용자 정보를 프론트로 넘겨줌
+    })
+  })(req, res, next);
+});
+```
 
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.
