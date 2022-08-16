@@ -3,7 +3,40 @@ const bcrypt = require('bcrypt');
 const passport = require('passport');
 const { User, Post } = require('../models'); // db.User
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
+
 const router = express.Router();
+
+router.get('/', async(req, res, next) => {
+  try {
+    if (req.user) { // 사용자가 있는 경우에만 보내줌
+      const fullUserWithoutPassword = await User.findOne({
+        where: { id: req.user.id },
+        attributes:
+        {
+          exclude: ['password'],
+        },
+        include: [{
+          model: Post, 
+          attributes: ['id'], // 로그인 정보 불러올 떄에는 id만 불러와서 숫자만 새면 됨
+        }, {
+          model: User,
+          as: 'Followings',
+          attributes: ['id'],
+        }, {
+          model: User,
+          as: 'Followers',
+          attributes: ['id'],
+        }]
+      })
+    res.status(200).json(fullUserWithoutPassword);
+  } else { // 사용자가 없으면 안 보내줌
+    res.status(200).json(null);
+  }
+  } catch(error) {
+    console.error(error);
+    next(error);
+  }  
+});
 
 // err, user, info는 done()의 인자
 router.post('/login', isNotLoggedIn, (req, res, next) => { // 미들웨어 확장(req, res, next를 사용하기 위함)
@@ -29,12 +62,15 @@ router.post('/login', isNotLoggedIn, (req, res, next) => { // 미들웨어 확�
         include: [{ // 포함시키기
           model: Post, // models\user.js에서 관계설정 한 모델들
           // hasMany라서 model:Post가 복수형이 되어 me.Posts가 됨
+          attributes: ['id'],
         }, {
           model: User,
           as: 'Followings', // 모델에서 as를 썼으면 include 할 때에도 as를 써줘야 함
+          attributes: ['id'],
         }, {
           model: User,
           as: 'Followers',
+          attributes: ['id'],
         }]
       })
       return res.status(200).json(fullUserWithoutPassword); // 로그인 완료, 사용자 정보를 프론트로 넘겨줌

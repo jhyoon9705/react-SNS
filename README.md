@@ -1510,6 +1510,55 @@ app.use(cors({
   }));
 ```
 
+## Part 14. Retrieve my login information every time
+- 새로고침하면 로그인이 풀림
+- 사실 로그인이 풀리는 것이 아니라 쿠키는 브라우저에 남아있으나 **쿠키가 서버 쪽으로 전달이 안되는 것임**
+- 즉, 서버 쪽으로 쿠키만 전달해주면 새로고침하더라도 로그인 상태로 유지시킬 수 있음
+<br />
+
+- 사용자 불러오는 요청 만들기
+  ```js
+  // routes\user.js
+  router.get('/', async(req, res, next) => {
+  try {
+    if (req.user) { // 사용자가 있는 경우에만 보내줌
+    const fullUserWithoutPassword = await User.findOne({
+        where: { id: req.user.id },
+        attributes:
+        {
+          exclude: ['password'],
+        },
+        include: [{
+          model: Post, 
+          attributes: ['id'], // 로그인 정보 불러올 떄에는 id만 불러와서 숫자만 새면 됨(데이터 절약)
+        }, {
+          model: User,
+          as: 'Followings',
+          attributes: ['id'],
+        }, {
+          model: User,
+          as: 'Followers',
+          attributes: ['id'],
+        }]
+      })
+    res.status(200).json(fullUserWithoutPassword);
+  } else { // 사용자가 없으면 안 보내줌
+    res.status(200).json(null);
+  }
+  } catch(error) {
+    console.error(error);
+    next(error);
+  }  
+  });
+  ```
+
+- 다음으로 `GET http://localhost:3065/user`에 대한 Redux 코드 작성을 해주면 됨
+- SSR이 적용이 안되어있기 떄문에, 현 상태는 로그인 후 새로고침하면 일시적으로 로그인이 풀린 것처럼 보이다가 다시 로그인 상태로 렌더링 되는 상태
+- 이후 SSR 적용으로 해결 예정
+
+
+
+
 
 
 
