@@ -1375,6 +1375,8 @@ module.exports = () => {
 - `models\user.js`에서 해당 모델(여기서는 `User`)과의 관계를 설정해놓은 다른 모델들에서 데이터를 불러올 수 있음
   - `attributes`: 원하는 정보를 포함시키거나 제외시킬 수 있음
   - `include`: 모델 포함시키기
+  - `limit`: 데이터 개수 제한
+  - `offset`: 데이터를 불러오는 시작 지점(like 배열)
 ```js
 // routes\user.js
 router.post('/login',(req, res, next) => { // 미들웨어 확장(req, res, next를 사용하기 위함)

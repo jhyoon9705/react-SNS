@@ -1,5 +1,6 @@
 const express = require('express');
 const postRouter = require('./routes/post');
+const postsRouter = require('./routes/posts');
 const userRouter = require('./routes/user');
 const db = require('./models');
 const cors = require('cors');
@@ -7,6 +8,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
 const dotenv = require('dotenv');
+const morgan = require('morgan'); // 요청과 응답을 기록
 const passportConfig = require('./passport');
 const app = express();
 
@@ -18,6 +20,9 @@ db.sequelize.sync()
   })
   .catch(console.error);
   passportConfig(); // passport 설정 적용
+
+  // middleware는 위에서 아래로, 왼쪽에서 오른쪽으로!
+  app.use(morgan('dev')); // 프론트에서 백으로 요청을 보내면 어떤 요청을 보냈는지 기록이 뜸
 
   app.use(cors({
     origin: 'http://localhost:3000',
@@ -49,15 +54,16 @@ app.get('/api', (req, res) => {
   res.send('hello api');
 })
 
-app.get('/api/posts', (req, res) => {
-  res.json([
-    { id: 1, content: 'hello'},
-    { id: 2, content: 'hello2'},
-    { id: 3, content: 'hello3'},
-  ]);
-});
+// app.get('/posts', (req, res) => {
+//   res.json([
+//     { id: 1, content: 'hello'},
+//     { id: 2, content: 'hello2'},
+//     { id: 3, content: 'hello3'},
+//   ]);
+// });
 
 app.use('/post', postRouter); // post가 prefix
+app.use('/posts', postsRouter);
 app.use('/user', userRouter);
 
 // 에러 처리 미들웨어가 내부적으로 이 위치에 존재
