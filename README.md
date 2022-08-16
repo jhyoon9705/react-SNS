@@ -1468,7 +1468,48 @@ router.post('/login', isNotLoggedIn, (req, res, next) => { // here
   });
   ```
   
+  ___
+
+## Part 13. Sharing cookies with credentials
+- 브라우저와 서버의 도메인이 다르면 CORS 문제가 발생
+- CORS 모듈로 access-control-allow-origin 헤더를 추가하여 문제를 해결하였음
+- 그러나 **도메인이 다르면, 쿠키도 전달이 되지 않음**
+- *로그인을 이미 했는데 401 error??*
+- 따라서, proxy 또는 CORS 모듈을 활용하여 문제를 해결
+```js
+// CORS 모듈 활용
+// back\app.js
+app.use(cors({
+  origin: '*',
+  credentials: true, // here / 쿠키도 전달을 가능하게 함
+})); // 모든 요청 허용(CORS 문제 해결)
+// 위 코드 두줄은 다른 router들보다 위에 작성(코드 진행이 순차적임)
+```
+```js
+// sagas\post.js
+function addCommentAPI(data) {
+return axios.post(`/post/${data.postId}/comment`, data, {
+  withCredentials: true, // here
+});
+}
+```
+- CORS 모듈 활용 시, 위 두 개를 넣어주어야 서로간에 쿠키가 전달됨
+- 그런데, `{withCredentials: true}`를 프론트 부분에서 거의 모든 요청에 넣어주어야 하므로 중복 코드가 많음. 따라서, 아래와 같이 axios 공통 설정으로 간소화함
   
+```js
+// sagas\index.js
+axios.defaults.baseURL = 'http://localhost:3065';
+axios.defaults.withCredentials = true; // 추가
+```
+- 또한 `withCredentials: true` 일 때에는,  Access-control-allow-origin이 `*`이면 안됨(주소를 정확히 작성)
+- 프론트와 백 사이에 민감한 정보(ex. 쿠키)를 주고받으므로 보안이 철저해진 것(아무나 허용 X) 
+```js
+app.use(cors({
+    origin: 'http://localhost:3000', // 와일드카드(*) 대신, 정확한 주소 작성
+    credentials: true,
+  }));
+```
+
 
 
 
