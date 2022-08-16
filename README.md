@@ -1411,5 +1411,69 @@ router.post('/login',(req, res, next) => { // 미들웨어 확장(req, res, next
 });
 ```
 
+#### 2-10. 커스텀 미들웨어로 로그인 여부 검사하기
+- 로그인과 회원가입은 로그인이 되어있지 않은 경우에만, 로그아웃은 로그인이 되어있는 경우에만 가능해야함
+- 따라서 로그인 여부를 확인하는 미들웨어를 만들어줌(미들웨어는 모두 `app.js`에)
+- passport에서 `isAuthenticated()`를 제공
+  - `req.isAuthenticated()`가 `true`면 로그인 되어있는 경우
+  - `req.isAuthenticated()`가 `false`면 로그인 되어있지 않은 경우
+- `next()` 안에 내용이 있으면 에러 처리, 없으면 다음 미들웨어로 이동
+```js
+// routes/middlewares,js
+exports.isLoggedIn = (req, res, next) => {
+  if (req.isAuthenticated()) { 
+    next();
+  } else {
+    res.status(401).send('로그인이 필요합니다.');
+  }
+}
+
+exports.isNotLoggedIn = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    next();
+  } else {
+    res.status(401).send('로그인하지 않은 사용자만 접근이 가능합니다.');
+  }
+}
+```
+- 위에서 작성한 미들웨어 사용하기
+  - `isNotLoggedIn` 미들웨어 실행
+```js
+// routes/user.js
+...
+const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
+
+...
+router.post('/login', isNotLoggedIn, (req, res, next) => { // here
+  passport.authenticate('local', (err, user, info) => {
+  ...
+...
+
+```
+- LogIn 프로세스
+  - 1. `back/app.js`에서 위에서 아래로 실행되다가 일치하는 라우터(`/user`)가 있으면 그 부분이 실행됨 (`app.use('/user', userRouter);`)
+  - 2. `router/user.js`내 해당 부분이 왼쪽부터 오른쪽으로 실행
+  - 3. `isNotLoggedIn` 미들웨어 실행
+    - 3-1. 로그인이 안되어있는 경우, `next()` 실행(다음 미들웨어로)
+    - 3-2. 로그인이 되어있는 경우,  `res.status(401).send('로그인하지 않은 사용자만 접근이 가능합니다.');` 실행 -> 끝
+  - 4. `3-1`에 의해 다음 미들웨어로 이동 (`isNotLoggedIn` 다음 부분/ `(req, res, next) => {...}`)
+    - 4-1. 에러가 없을 경우, 로그인 성공 -> 끝
+    - 4-2. 에러가 있을 경우, `next(err)`로 인해 에러 처리 미들웨어로 이동
+  - 5. 에러 처리 미들웨어는 `back/app.js` 내에 마지막 `app.use(...)`과 `app.listen(...)` 사이에 내부적으로 존재되어 실행
+
+  참고) 기본적인 에러 처리 미들웨어를 바꾸고 싶은 경우 <br />
+  ```js
+  app.user((err, req, res, next) => {
+  ...
+  });
+  ```
+  
+  
+
+
+
+
+
+
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.

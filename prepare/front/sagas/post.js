@@ -1,4 +1,4 @@
-import { all, fork, put, takeLatest, delay, throttle } from "redux-saga/effects";
+import { all, fork, put, takeLatest, delay, throttle, call } from "redux-saga/effects";
 import axios from "axios";
 import {
   ADD_POST_REQUEST,
@@ -41,27 +41,19 @@ function* loadPosts(action) {
 }
 
 function addPostAPI(data) {
-  return axios.post("/api/post", data);
+  return axios.post("/post", { content: data });
 }
 
 function* addPost(action) {
   try {
-    // const result = yield call(addPostAPI, action.data); // fork를 쓰면 비동기, call은 동기 함수 호출
-
-    // 서버 만들기 전 (for dev), delay effect로 비동기적인 효과 사용
-    yield delay(1000);
-
-    const id = shortId.generate();
+    const result = yield call(addPostAPI, action.data); // fork를 쓰면 비동기, call은 동기 함수 호출
     yield put({
       type: ADD_POST_SUCCESS,
-      data: {
-        id, 
-        content: action.data,
-      }
+      data: result.data,
     });
     yield put({
       type: ADD_POST_TO_ME,
-      data: id,
+      data: result.data.id,
     });
   } catch (err) {
     yield put({
@@ -99,19 +91,15 @@ function* removePost(action) {
 }
 
 function addCommentAPI(data) {
-  return axios.post(`/api/post/${data.postId}/comment`, data);
+  return axios.post(`/post/${data.postId}/comment`, data);
 }
 
 function* addComment(action) {
   try {
-    // const result = yield call(addPCommentAPI, action.data); // fork를 쓰면 비동기, call은 동기 함수 호출
-
-    // 서버 만들기 전 (for dev), delay effect로 비동기적인 효과 사용
-    yield delay(1000);
-
+    const result = yield call(addCommentAPI, action.data); // fork를 쓰면 비동기, call은 동기 함수 호출
     yield put({
       type: ADD_COMMENT_SUCCESS,
-      data: action.data,
+      data: result.data,
     });
   } catch (err) {
     yield put({
