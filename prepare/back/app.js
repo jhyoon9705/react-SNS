@@ -60,7 +60,13 @@ app.get('/api/posts', (req, res) => {
 app.use('/post', postRouter); // post가 prefix
 app.use('/user', userRouter);
 
-
+// 에러 처리 미들웨어가 내부적으로 이 위치에 존재
+// (미들웨어는 위에서 아래로, 왼쪽에서 오른쪽으로 실행)
+// 바꾸고 싶다면(ex. 에러 페이지를 따로 띄우기 등)
+// app.user((err, req, res, next) => {
+//  ...
+//});
+// 와 같이 작성 가능
 
 app.listen(3065, () => {
   console.log('서버 실행 중')

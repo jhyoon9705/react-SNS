@@ -2,10 +2,11 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 const { User, Post } = require('../models'); // db.User
+const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
 const router = express.Router();
 
 // err, user, info는 done()의 인자
-router.post('/login',(req, res, next) => { // 미들웨어 확장(req, res, next를 사용하기 위함)
+router.post('/login', isNotLoggedIn, (req, res, next) => { // 미들웨어 확장(req, res, next를 사용하기 위함)
   passport.authenticate('local', (err, user, info) => {
     if (err) {
       console.error(err);
@@ -41,7 +42,7 @@ router.post('/login',(req, res, next) => { // 미들웨어 확장(req, res, next
   })(req, res, next);
 });
 
-router.post('/', async (req, res, next) => { // POST /user/
+router.post('/', isNotLoggedIn, async (req, res, next) => { // POST /user/
   try {
     const exUser = await User.findOne({ // 이메일 중복검사 (없으면 exUser = null)
       where: { // 조건
@@ -65,10 +66,15 @@ router.post('/', async (req, res, next) => { // POST /user/
  
 });
 
-router.post('/user/logout', (req, res, next) => {
-  req.logout();
-  req.session.destroy();
-  res.send('Logout OK');
-})
+router.post('/logout', isLoggedIn, (req, res) => { // passport@0.6, 콜백함수를 제공하고 그 안에서 응답
+  req.logout((err) => {
+    req.session.destroy();
+    if (err) {
+      res.redirect("/");
+    } else {
+      res.send('Logout OK');
+    }
+  });
+});
 
 module.exports = router;
