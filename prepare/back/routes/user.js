@@ -113,4 +113,18 @@ router.post('/logout', isLoggedIn, (req, res) => { // passport@0.6, 콜백함수
   });
 });
 
+router.patch('/nickname', isLoggedIn, async (req, res, next) => {
+  try {
+    User.update({
+      nickname: req.body.nickname, // 무엇을
+    }, {
+      where: { id: req.user.id } // 누구것(어느것)
+    });
+    res.status(200).json({nickname: req.body.nickname});
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+})
+
 module.exports = router;

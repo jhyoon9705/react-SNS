@@ -66,19 +66,15 @@ function* addPost(action) {
 }
 
 function removePostAPI(data) {
-  return axios.delete("/api/post", data);
+  return axios.delete(`/post/${data}`);
 }
 
 function* removePost(action) {
   try {
-    // const result = yield call(addPostAPI, action.data); // fork를 쓰면 비동기, call은 동기 함수 호출
-
-    // 서버 만들기 전 (for dev), delay effect로 비동기적인 효과 사용
-    yield delay(1000);
-
+    const result = yield call(removePostAPI, action.data);
     yield put({
       type: REMOVE_POST_SUCCESS,
-      data: action.data,
+      data: result.data,
     });
     yield put({
       type: REMOVE_POST_OF_ME,

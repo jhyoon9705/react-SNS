@@ -58,14 +58,14 @@ export const UNFOLLOW_FAILURE = 'UNFOLLOW_FAILURE';
 export const ADD_POST_TO_ME = 'ADD_POST_TO_ME';
 export const REMOVE_POST_OF_ME = 'REMOVE_POST_OF_ME';
 
-const dummyUser = (data) => ({
-  ...data,
-  nickname: 'jhyoon',
-  id: 1,
-  Posts: [{ id: 1 }],
-  Followings: [{ nickname: 'zzangu' }, { nickname: 'simpson' }, { nickname: 'ppukka' }],
-  Followers: [{ nickname: 'zzangu' }, { nickname: 'simpson' }, { nickname: 'ppukka' }],
-});
+// const dummyUser = (data) => ({
+//   ...data,
+//   nickname: 'jhyoon',
+//   id: 1,
+//   Posts: [{ id: 1 }],
+//   Followings: [{ nickname: 'zzangu' }, { nickname: 'simpson' }, { nickname: 'ppukka' }],
+//   Followers: [{ nickname: 'zzangu' }, { nickname: 'simpson' }, { nickname: 'ppukka' }],
+// });
 
 // redux-thunk를 쓰는 경우 예시
 // redux-thunk: 한번에 dispatch를 여러번 할 수 있게 해줌
@@ -247,6 +247,7 @@ const reducer = (state = initialState, action) => {
         break;
   
       case CHANGE_NICKNAME_SUCCESS:
+        draft.me.nickname = action.data.nickname;
         draft.changeNicknameLoading = false;
         draft.changeNicknameDone = true;
         break;

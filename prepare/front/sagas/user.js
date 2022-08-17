@@ -17,12 +17,34 @@ import {
   UNFOLLOW_FAILURE,
   LOAD_MY_INFO_FAILURE,
   LOAD_MY_INFO_REQUEST,
-  LOAD_MY_INFO_SUCCESS
+  LOAD_MY_INFO_SUCCESS,
+  CHANGE_NICKNAME_REQUEST,
+  CHANGE_NICKNAME_FAILURE,
+  CHANGE_NICKNAME_SUCCESS
 } from "../reducers/user";
 import axios from "axios";
 
 // effect들 앞에 yield 키워드를 붙여주는 이유
 // test 시에 편리 (한줄씩 실행하며 테스트가 가능)
+
+function changeNicknameAPI(data) {
+  return axios.patch('/user/nickname', { nickname: data });
+}
+
+function* changeNickname(action) {
+  try {
+    const result = yield call(changeNicknameAPI, action.data); 
+    yield put({
+      type: CHANGE_NICKNAME_SUCCESS,
+      data: result.data,
+    });
+  } catch (err) {
+    yield put({
+      type: CHANGE_NICKNAME_FAILURE,
+      error: err.response.data,
+    });
+  }
+}
 
 function loadMyInfoAPI(data) {
   return axios.get("/user");
@@ -186,8 +208,13 @@ function* watchLoadMyInfo() {
   yield takeLatest(LOAD_MY_INFO_REQUEST, loadMyInfo);
 }
 
+function* watchChangeNickname() {
+  yield takeLatest(CHANGE_NICKNAME_REQUEST, changeNickname);
+}
+
 export default function* userSaga() {
   yield all([
+    fork(watchChangeNickname),
     fork(watchLoadMyInfo),
     fork(watchFollow),
     fork(watchUnfollow),

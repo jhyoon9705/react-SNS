@@ -22,6 +22,10 @@ const FollowButton = ({ post }) => {
     }
   }, [isFollowing]);
 
+  if (post.User.id === me.id) { // 내 게시글에는 팔로우 버튼이 안뜨게
+    return null;
+  }
+
   return (
     <Button loading={followLoading || unfollowLoading} onClick={onClickButton}>
       {isFollowing ? '언팔로우' : '팔로우'}
