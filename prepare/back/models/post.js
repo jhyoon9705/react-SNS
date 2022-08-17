@@ -10,12 +10,12 @@ module.exports = (sequelize, DataTypes) => {
     collate: 'utf8mb4_general_ci' // 한글 사용
   });
   Post.associate = (db) => {
-    db.Post.belongsTo(db.User); // Post는 User에 속해있음
-    db.Post.hasMany(db.Comment);
-    db.Post.hasMany(db.Image);
-    db.Post.belongsTo(db.Post, { as: 'Retweet'}); // 리트윗 PostId가 아닌 RetweetId가 생성
-    db.Post.belongsToMany(db.Hashtag, { through: 'PostHashtag'}); // 다대다 관계
-    db.Post.belongsToMany(db.User, { through: 'Like', as: 'Likers' }); // 게시글과 사용자의 좋아요 관계, as로 구별(별칭)
+    db.Post.belongsTo(db.User); // Post는 User에 속해있음 / post.addUser, getUser, removeUser, setUser 생성 by sequelize
+    db.Post.hasMany(db.Comment); // post.addComments 생성
+    db.Post.hasMany(db.Image); // post.addImages 생성
+    db.Post.belongsTo(db.Post, { as: 'Retweet'}); // 리트윗 PostId가 아닌 RetweetId가 생성 / post.addRetweet... 생성
+    db.Post.belongsToMany(db.Hashtag, { through: 'PostHashtag'}); // 다대다 관계 // post.addHashtags... 생성
+    db.Post.belongsToMany(db.User, { through: 'Like', as: 'Likers' }); // 게시글과 사용자의 좋아요 관계, as로 구별(별칭) / post.addLikers, post.removeLikers, ... 생성
     // cf) 일대일관계: hasOne => User.hasOne(UserInfo), UserInfo.belongsTo(User) / belongsTo쪽에 id가 생김
   };
 
