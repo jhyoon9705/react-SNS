@@ -1,9 +1,21 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const { Post, Comment, User } = require('../models');
 const { isLoggedIn } = require('./middlewares');
 
 const router = express.Router();
+
+try {
+  fs.accessSync('uploads');
+} catch (error) {
+  console.log('uploads 폴더가 없으므로 생성합니다.')
+  fs.mkdirSync('uploads');
+}
+
+
 router.post('/', isLoggedIn, async (req, res) => {
   try {
     const post = await Post.create({
@@ -33,6 +45,28 @@ router.post('/', isLoggedIn, async (req, res) => {
     console.error(error);
     next(error);
   }  
+});
+
+const upload = multer({
+  storage: multer.diskStorage({ // 컴퓨터 하드디스크(추후에 s3 클라우드 storage로 변경)
+    destination(req, file, done) {
+      done(null, 'uploads'); // uploads라는 폴더에 저장
+    },
+    filename(req, file, done) { // ex) photo.png
+      const ext = path.extname(file.originalname); // 확장자 추출 (ex. .png)
+      const basename = path.basename(file.originalname, ext) // ex) photo
+      done(null, basename + '_' + new Date().getTime() + ext); // ex) photo2022081722150213.png
+    },
+  }),
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB (서버에 너무 큰 용량 들어가는 것을 방지)
+});
+router.post('/images', isLoggedIn, upload.array('image'), (req, res, next) => {
+// input 하나(image)에서 여러개 올릴 때: array
+// 하나 올릴 때: single
+// 이미지 안 올리고 텍스트, json...: none()
+
+  console.log(req.files);
+  res.json(req.files.map((v) => v.filename));
 });
 
 router.post('/:postId/comment', isLoggedIn, async(req, res, next) => { // 바뀌는 부분: parameter
