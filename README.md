@@ -1511,6 +1511,7 @@ app.use(cors({
     credentials: true,
   }));
 ```
+___
 
 ## Part 14. Retrieve my login information every time
 - 새로고침하면 로그인이 풀림
@@ -1558,14 +1559,94 @@ app.use(cors({
 - SSR이 적용이 안되어있기 떄문에, 현 상태는 로그인 후 새로고침하면 일시적으로 로그인이 풀린 것처럼 보이다가 다시 로그인 상태로 렌더링 되는 상태
 - 이후 SSR 적용으로 해결 예정
 
+___
 
+## Part 15. Sequelize methods added to associated instances
+- 두 모델 사이에 관계가 설정되어있을 때, sequelize는 연관된 각 모델들과 interact 할 수 있는 method들을 생성해줌
+- 각 관계 종류별 제공되는 메소드들은 다음과 같음
 
+#### 1. Foo.hasOne(Bar)
+- `fooInstance.getBar()`
+- `fooInstance.setBar()`
+- `fooInstance.createBar()`
 
+#### 2. Foo.belongsTo(Bar)
+- `fooInstance.getBar()`
+- `fooInstance.setBar()`
+- `fooInstance.createBar()`
 
+#### 3. Foo.hasMany(Bar)
+- `fooInstance.getBars()`
+- `fooInstance.countBars()`
+- `fooInstance.hasBar()`
+- `fooInstance.hasBars()`
+- `fooInstance.setBars()`
+- `fooInstance.addBar()`
+- `fooInstance.addBars()`
+- `fooInstance.removeBar()`
+- `fooInstance.removeBars()`
+- `fooInstance.createBar()`
 
+#### 4. Foo.belongsToMany(Bar, { through: Baz })
+- `fooInstance.getBars()`
+- `fooInstance.countBars()`
+- `fooInstance.hasBar()`
+- `fooInstance.hasBars()`
+- `fooInstance.setBars()`
+- `fooInstance.addBar()`
+- `fooInstance.addBars()`
+- `fooInstance.removeBar()`
+- `fooInstance.removeBars()`
+- `fooInstance.createBar()`
 
+___
 
+## Part 16. Sequelize queries(Paranoid)
+#### 1. 조회 - `findOne()`, `findAll()`
+```js
+/* 특정 데이터만 조회 */
+const getOneUser = async() => {
+  const id = 1;
+  const user = await models.Users.findOne({where: { id:1 }});
+  console.log(user);
+}
 
+/* 전체 데이터 조회 */
+const getUsers = async() => {
+  const users = await models.Users.findAll();
+}
+```
+
+#### 2. 삽입 - `create()`
+```js
+const setNewUser = async() => {
+  var newUser = {
+    username : 'newInyong',
+    age : 20
+  }
+  const users = await models.Users.create(newUser);
+}
+```
+
+#### 3. 수정 - `update()`
+```js
+const updateUser = async() => {
+  await models.Users.update({
+    age: 25 // 무엇을 (age를 25로 update)
+  }, {
+    where: { id:2 }  // 어느 데이터를 (id가 2인 데이터를)
+  });
+}
+```
+
+#### 4. 삭제 - `delete()`
+```js
+const deleteUser = async() => {
+  await models.Users.destroy({where: { id:2 }}); // 특정 데이터만 삭제
+
+  await models.Users.destroy(); // 데이터 전체 삭제
+}
+```
 
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.
