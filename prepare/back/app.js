@@ -3,6 +3,7 @@ const postRouter = require('./routes/post');
 const postsRouter = require('./routes/posts');
 const userRouter = require('./routes/user');
 const db = require('./models');
+const path = require('path');
 const cors = require('cors');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
@@ -24,6 +25,10 @@ db.sequelize.sync()
   // middleware는 위에서 아래로, 왼쪽에서 오른쪽으로!
   app.use(morgan('dev')); // 프론트에서 백으로 요청을 보내면 어떤 요청을 보냈는지 기록이 뜸
 
+  app.use('/', express.static(path.join(__dirname, 'uploads')));
+  // directory name(현재폴더(back/)) + 'uploads' (운영체제에 따른 경로 구분자 다른 것을 해결)
+  // '/'는 front의 Postform.js에서 지정한 경로(http://localhost:3065/)
+  
   app.use(cors({
     origin: 'http://localhost:3000',
     credentials: true,
