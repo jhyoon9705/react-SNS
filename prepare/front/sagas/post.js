@@ -21,7 +21,10 @@ import {
   UNLIKE_POST_SUCCESS,
   UPLOAD_IMAGES_FAILURE,
   UPLOAD_IMAGES_REQUEST,
-  UPLOAD_IMAGES_SUCCESS
+  UPLOAD_IMAGES_SUCCESS,
+  RETWEET_FAILURE,
+  RETWEET_REQUEST,
+  RETWEET_SUCCESS
 } from "../reducers/post";
 import { ADD_POST_TO_ME, REMOVE_POST_OF_ME } from "../reducers/user";
 // import shortId from "shortid";
@@ -40,7 +43,26 @@ function* uploadImages(action) {
   } catch (err) {
     yield put({
       type: UPLOAD_IMAGES_FAILURE,
-      data: err.response.data,
+      error: err.response.data,
+    });
+  }
+}
+
+function retweetAPI(data) {
+  return axios.post(`/post/${data}/retweet`, data);
+}
+
+function* retweet(action) {
+  try {
+    const result = yield call(retweetAPI, action.data);
+    yield put({
+      type: RETWEET_SUCCESS,
+      data: result.data,
+    });
+  } catch (err) {
+    yield put({
+      type: RETWEET_FAILURE,
+      error: err.response.data,
     });
   }
 }
@@ -59,7 +81,7 @@ function* loadPosts(action) {
   } catch (err) {
     yield put({
       type: LOAD_POSTS_FAILURE,
-      data: err.response.data,
+      error: err.response.data,
     });
   }
 }
@@ -82,7 +104,7 @@ function* addPost(action) {
   } catch (err) {
     yield put({
       type: ADD_POST_FAILURE,
-      data: err.response.data,
+      error: err.response.data,
     });
   }
 }
@@ -105,7 +127,7 @@ function* removePost(action) {
   } catch (err) {
     yield put({
       type: REMOVE_POST_FAILURE,
-      data: err.response.data,
+      error: err.response.data,
     });
   }
 }
@@ -124,7 +146,7 @@ function* likePost(action) {
   } catch (err) {
     yield put({
       type: LIKE_POST_FAILURE,
-      data: err.response.data,
+      error: err.response.data,
     });
   }
 }
@@ -143,7 +165,7 @@ function* unlikePost(action) {
   } catch (err) {
     yield put({
       type: UNLIKE_POST_FAILURE,
-      data: err.response.data,
+      error: err.response.data,
     });
   }
 }
@@ -163,7 +185,7 @@ function* addComment(action) {
     console.error(err);
     yield put({
       type: ADD_COMMENT_FAILURE,
-      data: err.response.data,
+      error: err.response.data,
     });
   }
 }
@@ -205,8 +227,13 @@ function* watchUploadImages() {
   yield takeLatest(UPLOAD_IMAGES_REQUEST, uploadImages);
 }
 
+function* watchRetweet() {
+  yield takeLatest(RETWEET_REQUEST, retweet);
+}
+
 export default function* postSaga() {
   yield all([
+    fork(watchRetweet),
     fork(watchUploadImages),
     fork(watchAddPost),
     fork(watchLikePost),

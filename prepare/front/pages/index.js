@@ -8,8 +8,15 @@ import { useSelector, useDispatch } from "react-redux";
 
 const Home = () => {
   const { me } = useSelector((state) => state.user);
-  const { mainPosts, hasMorePosts, loadPostsLoading } = useSelector((state) => state.post);
+  const { mainPosts, hasMorePosts, loadPostsLoading, retweetError } = useSelector((state) => state.post);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (retweetError) {
+      alert(retweetError);
+    }
+  }, [retweetError]);
+
   useEffect(() => {
     dispatch({
       type: LOAD_MY_INFO_REQUEST,
