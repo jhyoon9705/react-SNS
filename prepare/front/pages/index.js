@@ -5,6 +5,8 @@ import PostCard from "../components/PostCard";
 import { LOAD_POSTS_REQUEST } from '../reducers/post';
 import { LOAD_MY_INFO_REQUEST } from '../reducers/user';
 import { useSelector, useDispatch } from "react-redux";
+import { END } from 'redux-saga';
+import wrapper from '../store/configureStore';
 
 const Home = () => {
   const { me } = useSelector((state) => state.user);
@@ -17,14 +19,16 @@ const Home = () => {
     }
   }, [retweetError]);
 
-  useEffect(() => {
-    dispatch({
-      type: LOAD_MY_INFO_REQUEST,
-    });
-    dispatch({
-      type: LOAD_POSTS_REQUEST,
-    });
-  }, []);
+  // 렌더링 전 데이터 불러오는 부분을 가장 먼저 하기
+  // SSR을 위해 아래 getServerSideProps 안으로...
+  // useEffect(() => {
+  //   dispatch({
+  //     type: LOAD_MY_INFO_REQUEST,
+  //   });
+  //   dispatch({
+  //     type: LOAD_POSTS_REQUEST,
+  //   });
+  // }, []);
 
   // 스크롤을 어느정도 끝까지 내렸을 때, 새로운 post들을 load하기
   // useEffect에서 addEventListener할 때에는 반드시 removeEventListner를 return해서 스크롤 했던 것을 해제
@@ -65,5 +69,18 @@ const Home = () => {
     </AppLayout>
   );
 };
+
+// Home보다 먼저 실행
+export const getServerSideProps = wrapper.getServerSideProps((store) => async ({ req, res }) => {
+  store.dispatch({
+    type: LOAD_MY_INFO_REQUEST,
+  });
+  store.dispatch({
+    type: LOAD_POSTS_REQUEST,
+  });
+  store.dispatch(END);
+  await store.sagaTask.toPromise();
+});
+// 위 dispatch가 실행되면 실행된 결과를 HYDRATE로 보내줌
 
 export default Home;

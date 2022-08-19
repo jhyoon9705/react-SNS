@@ -1648,5 +1648,95 @@ const deleteUser = async() => {
 }
 ```
 
+## Part 17. Server-side rendering(SSR) with Next.js
+### 1. CSR vs SSR
+**프로세스** <br />
+#### a. CSR
+- 사용자가 웹사이트에 요청을 보냄
+- 브라우저는 HTML 파일과 JS 파일의 링크를 CDN을 통해 전달받음
+- HTML과 JS 파일을 다운받음. 다운받는동안 사용자는 콘텐츠를 볼 수 없음
+- 다운로드가 완료되면 JS가 실행되고, 데이터를 위한 API를 불러옴. 이 과정에서 사용자는 placeHolder를 보게 됨(데이터가 비어있는 상태)
+- 서버에서 API 요청에 대한 응답을 보내줌
+- 서버에서 받아온 데이터를 placeHolder 자리에 넣음
+
+#### b. SSR
+- 사용자가 웹사이트에 요청을 보냄
+- 서버가 "Ready to Render" 즉시 렝더링 가능한 HTML 파일을 만들어서 클라이언트에게 응답
+- 클라이언트가 HTML 파일을 받아 렌더링. JS 파일은 아직 로드되지 않았으므로 no interative
+- 브라우저가 JS 파일을 다운로드
+  - JS파일이 받아지는동안 사용자는 콘텐츠를 볼 수는 있으나 interation은 불가(다운받는동안 발생한 interaction은 모두 기록)
+- 브라우저가 JS Framework를 실행
+- 기록되었던 interaction이 실행됨
+
+<br />
+
+**ex) 로그인 후 새로고침의 경우, 사용자 정보와 게시물 불러오기** <br />
+#### a. CSR
+- 브라우저에서 프론트 서버로 첫 페이지 **요청**
+  - 프론트에서 브라우저로 **응답**(사용자 정보 미포함)
+- 브라우저에서 프론트 서버로 사용자 정보 **요청**
+  - 프론트가 백 서버에서 사용자 정보를 불러와서 브라우저로 **응답**
+
+#### b. SSR
+- 브라우저에서 프론트 서버로 첫 페이지 **요청**
+  - 프론트 서버가 백 서버로부터 게시물, 로그인 정보 등을 모두 받아옴
+  - 프론트에서 브라우저로 **응답**
+
+<br />
+
+### 2. SSR의 장점
+- 초기 로딩 속도가 빨라서 콘텐츠가 사용자에게 빨리 보이는 느낌을 줄 수 있음
+  - 화면을 불러올 떄부터 먼저 데이터를 불러올 수 있다면, 데이터가 채워진 채로 화면이 렌더링 됨
+  - Home 컴포넌트보다 먼저 실행되는 것이 필요
+- CSR처럼 빈 HTML을 받아오는 것이 아니기 때문에 SEO(Search Engine Optimization)에 친화적임
+
+<br />
+
+### 3. SSR 구현
+- Next.js에서 SSR용 메소드를 제공하지만, Redux와 같이 사용하기에는 문제가 있어서 'next-redux-wrapper'가 제공하는 SSR용 메소드를 사용
+- 원래는, 메인 페이지(`front\pages\index.js`)에서 화면이 로딩된 후에 `useEffect`를 통해 사용자 정보와 게시물 정보를 받아옴(= CSR)
+- 따라서 화면을 받아올 때부터 먼저 데이터를 불러옴. 즉, 메인 페이지의 컴포넌트보다 먼저 실행되는 것이 필요
+```js
+// front\pages\index.js
+// getServerSideProps가 있으면 이 부분을 가장 먼저 실행하여 데이터 로드
+...
+export const getServerSideProps = wrapper.getServerSideProps((store) => async ({req, res}) => {
+  store.dispatch({
+    type: LOAD_MY_INFO_REQUEST,
+  });
+  store.dispatch({
+    type: LOAD_POSTS_REQUEST,
+  });
+  store.dispatch(END);
+  await store.sagaTask.toPromise();
+});
+```
+- 위 코드에서 `dispatch`를 하면 `store`에 변화가 생기고 이때, `HYDRATE` action이 실행되어 그 결과를 `reducers\index.js`에서  그것을 받음
+```js
+// front\reducers\index.js
+...
+const rootReducer = (state, action) => {
+  switch (action.type) {
+    case HYDRATE: // SSR이 완료될 때 호출되는 action
+      console.log('HYDRATE', action);
+      return action.payload;
+    default: {
+      const combinedReducer = combineReducers({
+        user,
+        post,
+      });
+      return combinedReducer(state, action);
+    }
+  }
+};
+```
+**cf) Hydrate** <br />
+: Server-side 단에서 렌더링 된 정적 페이지와 번들링된 JS파일을 클라이언트에게 보낸 뒤, 클라이언트 단에서 HTML 코드와 React인 JS코드를 서로 매칭 시키는 과정
+___
+
+
+
+
+
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.

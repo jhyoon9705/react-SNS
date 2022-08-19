@@ -14,19 +14,19 @@ import post from "./post";
 // store.dispatch(changeNickname('yoonjh'));
 
 // Reducer: (이전 상태, 액션) => 다음 상태
-const rootReducer = combineReducers({
-  // SSR을 위해 HYDRATE 추가를 하기 위해 index reducer를 추가
-  index: (state = {}, action) => {
-    switch (action.type) {
-      case HYDRATE:
-        return { ...state, ...action.payload };
-
-      default:
-        return state;
+const rootReducer = (state, action) => {
+  switch (action.type) {
+    case HYDRATE: // SSR이 완료될 때 호출되는 action
+      console.log('HYDRATE', action);
+      return action.payload;
+    default: {
+      const combinedReducer = combineReducers({
+        user,
+        post,
+      });
+      return combinedReducer(state, action);
     }
-  },
-  user,
-  post,
-});
+  }
+};
 
 export default rootReducer;
