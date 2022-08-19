@@ -1732,6 +1732,36 @@ const rootReducer = (state, action) => {
 ```
 **cf) Hydrate** <br />
 : Server-side 단에서 렌더링 된 정적 페이지와 번들링된 JS파일을 클라이언트에게 보낸 뒤, 클라이언트 단에서 HTML 코드와 React인 JS코드를 서로 매칭 시키는 과정
+
+<br />
+
+### 4. SSR시 쿠키 공유하기
+- 브라우저에서 백엔드로 데이터를 보낼 때, 브라우저가 알아서 쿠키를 담아서 보내줌
+- 그런데, SSR은 프론트에서 백엔드로 요청을 보내는 것임. 즉, `getServerSideProps()`는 프론트에서 실행됨(브라우저가 개입 X)
+- 따라서, credentials 문제가 발생하며, 쿠키를 전달해주어야 함(아래처럼 쿠키 전달 코드 추가)
+```js
+// front\pages\index.js
+export const getServerSideProps = wrapper.getServerSideProps((store) => async ({ req, res }) => {
+  // 서버 쪽에서 실행되면 req가 존재
+  const cookie = req ? req.headers.cookie : '';
+
+  // 프론트 서버에서 쿠키가 공유되는 문제 주의!
+  axios.defaults.headers.Cookie = ''; // 다른 사람이 새롭게 요청을 하기 전에 쿠키 초기화
+  // if(서버일 때 && 쿠키가 있을 때에만) 사용자의 쿠키를 넣어줌. 아니면 쿠키를 지움
+  if (req && cookie) { // 조건문이 없으면 다른 사람이 요청을 보냈을 때도 사용자(나)의 쿠키가 들어갈 수 있음
+    axios.defaults.headers.Cookie = cookie;
+  }
+  ...
+```
+
+- 이떄, 프론트 서버에서 다른 사용자의 쿠키가 공유되는 문제를 주의해야함
+- 다음과 같이 코드를 작성할 경우, axios.default 쿠키에 다른 사용자의 쿠키가 남을 수 있음
+
+```js
+// Incorrect code!
+const cookie = req ? req.headers.cookie : '';
+axios.defaults.headers.Cookie = cookie;
+```
 ___
 
 

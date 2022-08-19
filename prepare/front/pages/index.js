@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import axios from 'axios';
 import AppLayout from "../components/AppLayout";
 import PostForm from "../components/PostForm";
 import PostCard from "../components/PostCard";
@@ -72,6 +73,15 @@ const Home = () => {
 
 // Home보다 먼저 실행
 export const getServerSideProps = wrapper.getServerSideProps((store) => async ({ req, res }) => {
+  // 서버 쪽에서 실행되면 store.req가 존재
+  const cookie = req ? req.headers.cookie : '';
+
+  // 프론트 서버에서 쿠키가 공유되는 문제 주의!
+  axios.defaults.headers.Cookie = '';
+  // if(서버일 때 && 쿠키가 있을 때에만) 사용자의 쿠키를 넣어줌. 아니면 쿠키를 지움
+  if (req && cookie) { // 조건문이 없으면 다른 사람이 요청을 보냈을 때도 사용자(나)의 쿠키가 들어갈 수 있음
+    axios.defaults.headers.Cookie = cookie;
+  }
   store.dispatch({
     type: LOAD_MY_INFO_REQUEST,
   });
