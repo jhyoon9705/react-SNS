@@ -1647,10 +1647,11 @@ const deleteUser = async() => {
   await models.Users.destroy(); // 데이터 전체 삭제
 }
 ```
+___
 
 ## Part 17. Server-side rendering(SSR) with Next.js
 ### 1. CSR vs SSR
-**프로세스** <br />
+**프로세스**
 #### a. CSR
 - 사용자가 웹사이트에 요청을 보냄
 - 브라우저는 HTML 파일과 JS 파일의 링크를 CDN을 통해 전달받음
@@ -1670,7 +1671,7 @@ const deleteUser = async() => {
 
 <br />
 
-**ex) 로그인 후 새로고침의 경우, 사용자 정보와 게시물 불러오기** <br />
+**ex) 로그인 후 새로고침의 경우, 사용자 정보와 게시물 불러오기**
 #### a. CSR
 - 브라우저에서 프론트 서버로 첫 페이지 **요청**
   - 프론트에서 브라우저로 **응답**(사용자 정보 미포함)
@@ -1762,6 +1763,28 @@ export const getServerSideProps = wrapper.getServerSideProps((store) => async ({
 const cookie = req ? req.headers.cookie : '';
 axios.defaults.headers.Cookie = cookie;
 ```
+
+<br />
+
+### 5. getServerSideProps vs getStaticProps
+- `getServerSideProps`
+  - 접속할 때마다 접속한 상황에 따라 화면이 바뀌어야 할 경우
+
+- `getStaticProps`
+  - 언제 접속해도 데이터가 바뀔 일이 없을 경우
+  - ex) 블로그 게시물의 경우, 한 번 쓰면 콘텐츠들이 잘 바뀌지 않으므로 이런 것들을 미리 HTML로 만들어 놓음. 빌드 시에 SSR하여 HTML로 만들고 사용자가 페이지에 방문하면 그 HTML을 제공
+  - 사실상 쓰기 애매하고 어려움. 웹의 콘텐츠는 자주 바뀌기 때문
+  ```js
+  export const getStaticProps = wrapper.getStaticProps((store) => async ({ req, res }) => {
+  console.log('getStaticProps');
+  store.dispatch({
+    type: LOAD_USER_REQUEST,
+    data: 1,
+  });
+  store.dispatch(END);
+  await store.sagaTask.toPromise();
+  });
+  ```
 ___
 
 
