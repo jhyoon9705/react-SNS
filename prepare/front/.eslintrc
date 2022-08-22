@@ -41,6 +41,7 @@
     "operator-linebreak": "off",
     "no-trailing-spaces": "off",
     "max-len": "off",
-    "react/react-in-jsx-scope": "off"
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-props-no-spreading": "off",
   }
 }

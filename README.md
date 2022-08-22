@@ -1824,6 +1824,91 @@ router.get('/:postId', async (req, res, next) => { // GET /post/1
 
 ___
 
+## Part 18. SSR of CSS
+- Next.js 내부적으로 webpack과 babel이 돌아감
+- babel 설정을 임의로 customizing 가능
+```js
+//front/.babelrc
+{
+  "preset": ["next/babel"],
+  "plugins": [
+    ["styled-components", {
+      "ssr": true, // SSR
+      "displayName": true // 개발모드에서 식별자가 컴포넌트 이름으로 바뀜 
+    }]
+  ]
+}
+```
+
+<br />
+
+- `front/pages/_document.js`를 생성하면 `_app.js`의 상위 컴포넌트로써 `_app.js`를 감싸게 됨
+- `_document.js`의 기본꼴은 아래와 같음
+```js
+import React from 'react';
+import Document, { Html, Head, Main, NextScript } from 'next/document';
+
+export default class MyDocument extends Document {
+  render() {
+    return (
+      <Html>
+        <Head />
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
+}
+```
+
+<br />
+
+- CSS의 SSR을 위한 코드는 아래와 같음 (즉, styled-components를 SSR)
+```js
+import React from 'react';
+import Document, { Html, Head, Main, NextScript } from 'next/document';
+import { ServerStyleSheet } from 'styled-components';
+
+export default class MyDocument extends Document {
+  static async getInitialProps(ctx) {
+    const sheet = new ServerStyleSheet();
+    const originalRenderPage = ctx.renderPage;
+    try {
+      ctx.renderPage = () => originalRenderPage({
+        enhanceApp: (App) => (props) => sheet.collectStyles(<App {...props} />),
+      });
+      const initialProps = await Document.getInitialProps(ctx);
+      return {
+        ...initialProps,
+        styles: (
+          <>
+            {initialProps.styles}
+            {sheet.getStyleElement()}
+          </>
+        ),
+      };
+    } catch (error) {
+      console.error(error);
+    } finally {
+      sheet.seal();
+    }
+  }
+
+  render() {
+    return (
+      <Html>
+        <Head />
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
+}
+```
 
 
 
