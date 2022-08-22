@@ -24,7 +24,10 @@ import {
   UPLOAD_IMAGES_SUCCESS,
   RETWEET_FAILURE,
   RETWEET_REQUEST,
-  RETWEET_SUCCESS
+  RETWEET_SUCCESS,
+  LOAD_POST_FAILURE,
+  LOAD_POST_REQUEST,
+  LOAD_POST_SUCCESS,
 } from "../reducers/post";
 import { ADD_POST_TO_ME, REMOVE_POST_OF_ME } from "../reducers/user";
 // import shortId from "shortid";
@@ -81,6 +84,25 @@ function* loadPosts(action) {
   } catch (err) {
     yield put({
       type: LOAD_POSTS_FAILURE,
+      error: err.response.data,
+    });
+  }
+}
+
+function loadPostAPI(data) {
+  return axios.get(`/post/${data}`); // 쿼리 스트링(주소 뒤에, 키=값&키=값 / get은 두 번째인자가 withCredentials 자리)
+}
+
+function* loadPost(action) {
+  try {
+    const result = yield call(loadPostAPI, action.data);
+    yield put({
+      type: LOAD_POST_SUCCESS,
+      data: result.data,
+    });
+  } catch (err) {
+    yield put({
+      type: LOAD_POST_FAILURE,
       error: err.response.data,
     });
   }
@@ -216,6 +238,10 @@ function* watchAddComment() {
   yield takeLatest(ADD_COMMENT_REQUEST, addComment);
 }
 
+function* watchLoadPost() {
+  yield takeLatest(LOAD_POST_REQUEST, loadPost);
+}
+
 function* watchLoadPosts() {
   yield throttle(5000, LOAD_POSTS_REQUEST, loadPosts);
   // 응답을 차단할 뿐, 요청 자체를 차단하지 못함
@@ -240,6 +266,7 @@ export default function* postSaga() {
     fork(watchUnlikePost),
     fork(watchAddComment), 
     fork(watchRemovePost), 
-    fork(watchLoadPosts)
+    fork(watchLoadPosts),
+    fork(watchLoadPost)
   ]);
 }

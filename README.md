@@ -1785,6 +1785,43 @@ axios.defaults.headers.Cookie = cookie;
   await store.sagaTask.toPromise();
   });
   ```
+
+<br />
+  
+### 6. Dynamic routing
+- 각 게시글들에 대한 주소 만들어주기
+- 파일명을 `post\[id].js`와 같이 대괄호(`[]`)로 감싸주면 대괄호 안의 내용을 바꾸며 routing 할 수 있음
+```js
+// pages/post/[id].js
+import { useRouter } from 'next/router';
+
+const Post = () => {
+  const router = useRouter();
+  const { id } = router.query;
+
+  return (
+    <div>{id}번 게시글</div>
+  );
+};
+
+export default Post;
+```
+
+```js
+// back/routes/post.js
+router.get('/:postId', async (req, res, next) => { // GET /post/1
+  try {
+    const post = await Post.findOne({
+      where: { id: req.params.postId },
+    });
+    if (!post) {
+      return res.status(404).send('존재하지 않는 게시글입니다.');
+    }
+    const fullPost = await Post.findOne({
+      ...
+
+```
+
 ___
 
 
