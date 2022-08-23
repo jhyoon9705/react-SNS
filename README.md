@@ -2035,6 +2035,77 @@ module.exports = withBundleAnalyzer({
 - `npm run build`하여 빌드
 ___
 
+## Part 21. Model의 최신 문법(class)로의 전환
+- Typescript에서의 타입 추론이 용이하므로 model 생성 시, 아래의 방법을 사용하는 것을 권장 <br />
+
+기존의 다음과 같은 코드를
+```js
+module.exports = (sequelize, DataTypes) => {
+  const Comment = sequelize.define('Comment', { 
+    content: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+  }, {
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_general_ci'
+  });
+  Comment.associate = (db) => {
+    db.Comment.belongsTo(db.User); 
+    db.Comment.belongsTo(db.Post);
+  };
+
+  return Comment;
+}
+```
+다음과 같은 코드로 변환 가능
+```js
+const DataTypes = require('sequelize');
+const { Model } = DataTypes;
+
+module.exports = class Comment extends Model {
+  static init(sequelize) {
+    return super.init({
+      content: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+    }, {
+      modelName: 'Comment',
+      tableName: 'comments',
+      charset: 'utf8mb4',
+      collate: 'utf8mb4_general_ci',
+      sequelize,
+    });
+  }
+
+  static associate(db) {
+    db.Comment.belongsTo(db.User);
+    db.Comment.belongsTo(db.Post);
+  }
+};
+```
+
+`models/index.js`에서는 다음과 같이 사용
+```js
+const comment = require('./comment');
+const hashtag = require('./hashtag');
+...
+
+db.Comment = comment;
+db.Hashtag = hashtag;
+...
+
+Object.keys(db).forEach(modelName => {
+  db[modelName].init(sequelize);
+})
+
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
+```
 
 
 ___
