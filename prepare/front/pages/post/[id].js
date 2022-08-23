@@ -1,3 +1,4 @@
+import React from 'react';
 import { useRouter } from 'next/router';
 import wrapper from '../../store/configureStore';
 import { LOAD_POST_REQUEST } from '../../reducers/post';
