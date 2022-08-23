@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import { END } from 'redux-saga';
-import { useInView } from 'react-intersection-observer';
+// import { useInView } from 'react-intersection-observer';
 
 import axios from 'axios';
 import { LOAD_HASHTAG_POSTS_REQUEST, LOAD_POSTS_REQUEST } from '../../reducers/post';
@@ -16,11 +16,11 @@ function Hashtag() {
   const router = useRouter();
   const { tag } = router.query;
   const { mainPosts, hasMorePosts, loadPostsLoading } = useSelector((state) => state.post);
-  const [ref, inView] = useInView();
+  // const [ref, inView] = useInView();
 
   useEffect(
     () => {
-      if (inView && hasMorePosts && !loadPostsLoading) {
+      if (hasMorePosts && !loadPostsLoading) {
         const lastId = mainPosts[mainPosts.length - 1]?.id;
         dispatch({
           type: LOAD_POSTS_REQUEST,
@@ -29,7 +29,7 @@ function Hashtag() {
         });
       }
     },
-    [inView, hasMorePosts, loadPostsLoading, mainPosts, tag],
+    [hasMorePosts, loadPostsLoading, mainPosts, tag],
   );
 
   return (
@@ -37,7 +37,7 @@ function Hashtag() {
       {mainPosts.map((c) => (
         <PostCard key={c.id} post={c} />
       ))}
-      <div ref={hasMorePosts && !loadPostsLoading ? ref : undefined} style={{ height: 10 }} />
+      {/* <div ref={hasMorePosts && !loadPostsLoading ? ref : undefined} style={{ height: 10 }} /> */}
     </AppLayout>
   );
 }

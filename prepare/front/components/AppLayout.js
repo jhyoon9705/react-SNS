@@ -1,5 +1,5 @@
 // 특정 컴포넌트끼리 공통인 것들
-import React from "react";
+import React, { useCallback } from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { Menu, Input, Row, Col } from "antd";
@@ -7,6 +7,8 @@ import UserProfile from "../components/UserProfile";
 import LoginForm from "../components/LoginForm";
 import { useSelector } from "react-redux";
 import styled, { createGlobalStyle } from "styled-components";
+import useInput from '../hooks/useInput';
+import Router from 'next/router';
 
 const SearchInput = styled(Input.Search)`
   vertical-align: middle;
@@ -32,7 +34,12 @@ const AppLayout = ({ children }) => {
   // const { isLoggedIn } = useSelector((state) => state.user);
   // // const isLoggedIn = useSelector((state =? state.user.isLoggedIn)); 과 동일
 
+  const [searchInput, onChangeSearchInput] = useInput('');
   const { me } = useSelector((state) => state.user);
+
+  const onSearch = useCallback(() => {
+    Router.push(`/hashtag/${searchInput}`);
+  }, [searchInput]);
 
   return (
     <div>
@@ -49,7 +56,13 @@ const AppLayout = ({ children }) => {
           </Link>
         </Menu.Item>
         <Menu.Item>
-          <SearchInput style={{ verticalAlign: "middle" }} />
+          <SearchInput 
+          enterButton 
+          style={{ verticalAlign: "middle" }} 
+          value={searchInput}
+          onChange={onChangeSearchInput}
+          onSearch={onSearch}
+          />
         </Menu.Item>
         <Menu.Item>
           <Link href="/signup">
