@@ -1980,8 +1980,60 @@ useEffect(() => {
 ```
 ___
 
+## Part 20. Custom webpack & bundle-analyzer
+### 1. Custom webpack
+- next.config는 전역설정으로 배포에 관련된 코드를 작성한 것
+- `next.config.js` 파일을 생성하여, 기존의 설정을 바꿔주는 방식으로 진행
 
+### 2. Bundle-analyzer
+- `ANALYZE === true`로 설정하고 빌드할 경우, 어떻게 빌드되었는지를 브라우저에서 확인 가능
+- 클라이언트 부분이 사용자와 바로 연결되어있는 부분이기 때문에, 이를 잘 확인하여 용량을 줄이는 것이 중요
+- `concatenated` 폴더는 생략해도 됨
+- 쓸모 없는 부분을 빼기 위해서는 "~~~ tree shaking"을 검색하여 적용
 
+### 3. cross-env
+- `ANALYZE=true NODE_ENV=production next build`와 같은 스크립트 코드는 리눅스나 맥에서만 작동함
+- 윈도우에서의 사용을 위해 `cross-env` 패키지를 설치하고 앞에 `cross-env`를 추가
+  ```js
+  "scripts": {
+    "dev": "next",
+    "build": "cross-env ANALYZE=true NODE_ENV=production next build"
+  },
+  ```
+
+### 4. 예시
+```js
+// front/next.config.js
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+module.exports = withBundleAnalyzer({
+  compress: true,
+  webpack(config, { webpack }) {
+    const prod = process.env.NODE_ENV === 'production';
+    return {
+      ...config,
+      mode: prod ? 'production' : 'development',
+      devtool: prod ? 'hidden-source-map' : 'eval',
+      plugins: [
+        ...config.plugins,
+        new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /^\.\/ko$/), // moment locale tree shaking
+      ],
+    };
+  },
+});
+```
+```js
+// package.json
+"scripts": {
+    "dev": "next",
+    "build": "cross-env ANALYZE=true NODE_ENV=production next build"
+  },
+```
+
+- `npm run build`하여 빌드
+___
 
 
 
