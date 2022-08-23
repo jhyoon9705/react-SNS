@@ -2,6 +2,7 @@ const express = require('express');
 const postRouter = require('./routes/post');
 const postsRouter = require('./routes/posts');
 const userRouter = require('./routes/user');
+const hashtagRouter = require('./routes/hashtag');
 const db = require('./models');
 const path = require('path');
 const cors = require('cors');
@@ -70,6 +71,7 @@ app.get('/api', (req, res) => {
 app.use('/post', postRouter); // post가 prefix
 app.use('/posts', postsRouter);
 app.use('/user', userRouter);
+app.use('/hashtag', hashtagRouter);
 
 // 에러 처리 미들웨어가 내부적으로 이 위치에 존재
 // (미들웨어는 위에서 아래로, 왼쪽에서 오른쪽으로 실행)

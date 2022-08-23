@@ -1766,7 +1766,7 @@ axios.defaults.headers.Cookie = cookie;
 
 <br />
 
-### 5. getServerSideProps vs getStaticProps
+### 5. getServerSideProps vs getStaticProps vs getStaticPaths
 - `getServerSideProps`
   - 접속할 때마다 접속한 상황에 따라 화면이 바뀌어야 할 경우
 
@@ -1785,6 +1785,36 @@ axios.defaults.headers.Cookie = cookie;
   await store.sagaTask.toPromise();
   });
   ```
+
+- `getStaticPaths`
+  - dynamic routing 일 때,  `getStaticProps`를 쓰면 `getStaticProps`를 써주어야 함
+```js
+// post/[id].js
+export async function getStaticPaths() {
+  return {
+    paths: [
+      { params: { id: '1' }}, // 1, 2, 3번 게시글이 미리 빌드가 됨
+      { params: { id: '2' }}, // params.id는 [id] 부분
+      { params: { id: '3' }},
+    ],
+    fallback: true, 
+  }
+}
+
+export const getStaticProps = wrapper.getStaticProps((store) => asnyc({ req, res }) => {
+  ...
+})
+```
+- `fallback`이 false이면 paths에 적혀있지 않은 페이지들은 error를 띄움
+- `fallback`이 true이면 SSR이 안되므로, CSR을 할 수 있도록 잠시 기다려주는 역할을 하는 코드를 아래와 같이 추가
+- 예를 들어, 4번 id가 paths에 없으면 `getStaticProps` 부분을 실행해서 화면을 그려주고, 그동안에 아래의 코드를 실행
+
+  ```js
+  if (router.isFallback) {
+    return <div>로딩중...</div>
+  }
+  ```
+
 
 <br />
   
@@ -1909,6 +1939,48 @@ export default class MyDocument extends Document {
   }
 }
 ```
+
+___
+
+## Part 19. SWR
+- SWR이란 데이터를 가져오기 위한 React Hooks로 Next.js(vercel)에서 만든 라이브러리
+- Redux 사용시 흐름(View - Dispatch - Action - Reducer - Store - State)에 따라 작성해야 하는 코드의 양이 많고, 한 번 가져왔던 정보라도 컴포넌트가 마운트될 때마다 새로 가져와서 갈아끼우는 작업이 비효율적인 것을 보완
+- `npm i swr`
+
+### 1. fetcher 함수 생성
+```js
+// front/pages/profile.js
+...
+const fetcher = (url) => axios.get(url, { withCredentials: true }).then((result) => result.data);
+...
+```
+
+### 2. `useSWR()`을 통한 사용
+```js
+const { data: followersData, error: followerError } = useSWR(`http://localhost:3065/user/followers?limit={followersLimit}`, fetcher);
+const { data: followingsData, error: followingError } = useSWR(`http://localhost:3065/user/followers?limit={followingsLimit}`, fetcher);
+```
+- 이때, `fetcher`에서의 `result.data`가 각 `data` field(`followersData`, `followingsData`)로 들어감
+
+<br />
+
+- SWR의 사용으로 다음의 Redux 코드를 대체 가능
+```js
+useEffect(() => {
+  dispatch({
+    type: LOAD_FOLLOWERS_REQUEST,
+  });
+}, []);
+
+useEffect(() => {
+  dispatch({
+    type: LOAD_FOLLOWINGS_REQUEST,
+  });
+}, []);
+```
+___
+
+
 
 
 
