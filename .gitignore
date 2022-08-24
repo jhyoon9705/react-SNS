@@ -142,3 +142,5 @@ node_modules
 .next
 
 prepare/back/uploads/
+
+react-nodebird.pem
