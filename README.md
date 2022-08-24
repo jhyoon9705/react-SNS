@@ -2035,7 +2035,7 @@ module.exports = withBundleAnalyzer({
 - `npm run build`하여 빌드
 ___
 
-## Part 21. Model의 최신 문법(class)로의 전환
+## Part 21. Model의 최신 문법(class)으로의 전환
 - Typescript에서의 타입 추론이 용이하므로 model 생성 시, 아래의 방법을 사용하는 것을 권장 <br />
 
 기존의 다음과 같은 코드를
@@ -2106,7 +2106,14 @@ Object.keys(db).forEach(modelName => {
   }
 });
 ```
+___
+## [배포(AWS)]
+- EC2 생성하기
+- 우분투에 노드 설치하기
+- 우분투에 MySQL 설치하기
+- pm2 사용하기
 
+#### ※ 배포(AWS) 부분은 추후 내용 업데이트 및 코드 업로드 예정
 
 ___
 ##### ※ 해당 repository의 code는 '인프런 - [리뉴얼] React로 NodeBird SNS 만들기' 강좌를 참조하여 작성하였습니다.

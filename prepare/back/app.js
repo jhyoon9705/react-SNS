@@ -13,6 +13,8 @@ const dotenv = require('dotenv');
 const morgan = require('morgan'); // 요청과 응답을 기록
 const passportConfig = require('./passport');
 const app = express();
+const hpp = require('hpp');
+const helmet = require('helmet');
 
 dotenv.config();
 
@@ -22,6 +24,14 @@ db.sequelize.sync()
   })
   .catch(console.error);
   passportConfig(); // passport 설정 적용
+
+  if (process.env.NODE_ENV === 'production') {
+    app.use(morgan('combined'));
+    app.use(hpp());
+    app.use(helmet());
+  } else {
+    app.use(morgan('dev'));
+  }
 
   // middleware는 위에서 아래로, 왼쪽에서 오른쪽으로!
   app.use(morgan('dev')); // 프론트에서 백으로 요청을 보내면 어떤 요청을 보냈는지 기록이 뜸
